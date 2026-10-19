@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2064d87244f6349468f35b8105652b79, type: 3}
+  m_Name: GameSettings
+  m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.GameSettings
+  _zoneSettings: {fileID: 11400000, guid: 6c93c7e4e2e78894e832020f96164423, type: 2}
+  _bronzeWheel: {fileID: 11400000, guid: 3560da3215d508044895ad8f0003847b, type: 2}
+  _silverWheel: {fileID: 11400000, guid: ef8e075c323dd8e4aa69079c211fa1c5, type: 2}
+  _goldenWheel: {fileID: 11400000, guid: 5e7adbd672c8fb146b066afe2fba93ce, type: 2}

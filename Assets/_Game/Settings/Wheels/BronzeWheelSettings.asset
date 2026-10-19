@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1b602396c58d8b4184d30f65c82ee5a, type: 3}
+  m_Name: BronzeWheelSettings
+  m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.WheelSettings
+  _baseSprite: {fileID: 21300000, guid: b5af15a9a5a161e4fba46d7a34d70ec9, type: 3}
+  _pointerSprite: {fileID: 21300000, guid: b218e39582074314ba74b9887eb6da70, type: 3}
+  _slotZeroAngleDegrees: 0
+  _clockwiseSlotOrder: 1
+  _pointerAngleDegrees: 0
+  _slots:
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}
+    _baseQuantity: 100
+    _quantityIncreasePerTier: 25
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+    _baseQuantity: 5
+    _quantityIncreasePerTier: 1
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: 360565de424dff74598558228bccb7f5, type: 2}
+    _baseQuantity: 20
+    _quantityIncreasePerTier: 5
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: a7cd22e616fee6345a132bcb0406208f, type: 2}
+    _baseQuantity: 20
+    _quantityIncreasePerTier: 5
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: a538a7eb37f8f234f9210b10c9dbe7a8, type: 2}
+    _baseQuantity: 1
+    _quantityIncreasePerTier: 1
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: d2cefe06eb300064da7ee0bae076ef9d, type: 2}
+    _baseQuantity: 1
+    _quantityIncreasePerTier: 1
+  - _outcomeKind: 0
+    _reward: {fileID: 11400000, guid: f4b8fef09c757a74e91bde1a5cb85cc8, type: 2}
+    _baseQuantity: 1
+    _quantityIncreasePerTier: 1
+  - _outcomeKind: 1
+    _reward: {fileID: 0}
+    _baseQuantity: 0
+    _quantityIncreasePerTier: 0
