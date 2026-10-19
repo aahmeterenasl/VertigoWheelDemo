@@ -1,7 +1,7 @@
 {
   "name": "VertigoWheel.Tests.PlayMode",
   "rootNamespace": "VertigoWheel.Tests.PlayMode",
-  "references": ["VertigoWheel.Core", "VertigoWheel.Settings", "VertigoWheel.UI", "Unity.ugui", "Unity.TextMeshPro"],
+  "references": ["VertigoWheel.Core", "VertigoWheel.Settings", "VertigoWheel.UI", "VertigoWheel.App", "Unity.ugui", "Unity.TextMeshPro"],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

@@ -39,7 +39,45 @@ namespace VertigoWheel.Tests.EditMode
             Assert.That(_settings.FullTurns, Is.EqualTo(5));
             Assert.That(_settings.ClockwiseSpin, Is.True);
             Assert.That(_settings.SpinEase, Is.EqualTo(Ease.InOutCubic));
+            Assert.That(_settings.DialogDurationSeconds, Is.EqualTo(0.18f));
+            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.25f));
             Assert.DoesNotThrow(() => _settings.Validate());
+        }
+
+        [Test]
+        public void DialogDurations_SupportImmediateAndAnimatedReveals()
+        {
+            _settings.DialogDurationSeconds = 0f;
+            _settings.RewardRevealDurationSeconds = 0.5f;
+            Assert.That(_settings.DialogDurationSeconds, Is.Zero);
+            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.5f));
+            Assert.DoesNotThrow(() => _settings.Validate());
+        }
+
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void InvalidDialogDurations_DoNotReplaceAuthoredValues(float duration)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.DialogDurationSeconds = duration);
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.RewardRevealDurationSeconds = duration);
+            Assert.That(_settings.DialogDurationSeconds, Is.EqualTo(0.18f));
+            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.25f));
+        }
+
+        [TestCase("_dialogDurationSeconds", -1f)]
+        [TestCase("_dialogDurationSeconds", float.NaN)]
+        [TestCase("_dialogDurationSeconds", float.PositiveInfinity)]
+        [TestCase("_rewardRevealDurationSeconds", -1f)]
+        [TestCase("_rewardRevealDurationSeconds", float.NaN)]
+        [TestCase("_rewardRevealDurationSeconds", float.PositiveInfinity)]
+        public void SerializedInvalidDialogDurations_AreValidated(string field, float duration)
+        {
+            SerializedObject serialized = new SerializedObject(_settings);
+            serialized.FindProperty(field).floatValue = duration;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
         }
 
         [Test]

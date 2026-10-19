@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace VertigoWheel.UI.Wheel
 {
+    [ExecuteAlways]
     public sealed class WheelSlotView : MonoBehaviour
     {
         [SerializeField]
@@ -12,11 +13,16 @@ namespace VertigoWheel.UI.Wheel
         [SerializeField]
         private TMP_Text _quantity;
 
+        [SerializeField, HideInInspector]
+        private bool _isBomb;
+
         public void Bind(Sprite icon, long quantity, bool isBomb)
         {
+            _isBomb = isBomb;
             _icon.sprite = icon;
             _icon.preserveAspect = true;
             _quantity.text = isBomb ? string.Empty : "x" + FormatQuantity(quantity);
+            ApplyContentLayout();
         }
 
         public void SetLayout(Vector2 position, float size)
@@ -30,6 +36,29 @@ namespace VertigoWheel.UI.Wheel
         public void KeepUpright(float wheelRotationDegrees)
         {
             transform.localRotation = Quaternion.Euler(0, 0, -wheelRotationDegrees);
+        }
+
+        private void OnEnable()
+        {
+            ApplyContentLayout();
+        }
+
+        private void ApplyContentLayout()
+        {
+            if (_icon == null || _quantity == null)
+            {
+                return;
+            }
+
+            // Reward artwork reserves room below for its quantity; a bomb uses the slot center.
+            RectTransform iconRect = _icon.rectTransform;
+            Vector2 anchorMin = iconRect.anchorMin;
+            Vector2 anchorMax = iconRect.anchorMax;
+            anchorMin.y = _isBomb ? 0.19f : 0.29f;
+            anchorMax.y = _isBomb ? 0.81f : 0.91f;
+            iconRect.anchorMin = anchorMin;
+            iconRect.anchorMax = anchorMax;
+            _quantity.gameObject.SetActive(!_isBomb);
         }
 
         private static string FormatQuantity(long quantity)

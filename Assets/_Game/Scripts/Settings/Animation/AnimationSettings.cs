@@ -19,6 +19,18 @@ namespace VertigoWheel.Settings
         [SerializeField]
         private Ease _spinEase = Ease.InOutCubic;
 
+        [SerializeField, Min(0f)]
+        private float _dialogDurationSeconds = 0.18f;
+
+        [SerializeField, Min(0f)]
+        private float _rewardRevealDurationSeconds = 0.25f;
+
+        [SerializeField]
+        private Sprite _rewardGlowSprite;
+
+        [SerializeField]
+        private Sprite _rewardShineSprite;
+
         public float SpinDurationSeconds
         {
             get => _spinDurationSeconds;
@@ -55,12 +67,54 @@ namespace VertigoWheel.Settings
             }
         }
 
+        public float DialogDurationSeconds
+        {
+            get => _dialogDurationSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _dialogDurationSeconds = value;
+            }
+        }
+
+        public float RewardRevealDurationSeconds
+        {
+            get => _rewardRevealDurationSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _rewardRevealDurationSeconds = value;
+            }
+        }
+
+        public Sprite RewardGlowSprite
+        {
+            get => _rewardGlowSprite;
+            set => _rewardGlowSprite = value;
+        }
+
+        public Sprite RewardShineSprite
+        {
+            get => _rewardShineSprite;
+            set => _rewardShineSprite = value;
+        }
+
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
             ValidateDuration(_spinDurationSeconds);
             ValidateFullTurns(_fullTurns);
             ValidateEase(_spinEase);
+            ValidateOptionalDuration(_dialogDurationSeconds);
+            ValidateOptionalDuration(_rewardRevealDurationSeconds);
+        }
+
+        private static void ValidateOptionalDuration(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Dialog duration must be nonnegative and finite.");
+            }
         }
 
         private static void ValidateDuration(float value)

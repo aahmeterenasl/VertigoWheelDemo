@@ -53,6 +53,9 @@ namespace VertigoWheel.Core.Zones
             _maximumRewardQuantity = maximumRewardQuantity;
         }
 
+        public int SafeZoneInterval => _safeZoneInterval;
+        public int SuperZoneInterval => _superZoneInterval;
+
         public ZoneType GetZoneType(int zoneNumber)
         {
             ValidateZoneNumber(zoneNumber);
