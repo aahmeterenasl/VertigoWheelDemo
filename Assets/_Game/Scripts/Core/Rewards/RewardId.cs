@@ -20,6 +20,27 @@ namespace VertigoWheel.Core.Rewards
         SummerViceBayonet = 11,
         Tier3Sniper = 12,
         Tier3Shotgun = 13,
-        Tier3Smg = 14
+        Tier3Smg = 14,
+        Molotov = 15,
+        M26Grenade = 16,
+        Neurostim = 17,
+        EasterAviatorGlasses = 18,
+        EasterBaseballCap = 19,
+        PumpkinHelmet = 20,
+        EasterTimeBayonet = 21,
+        BigChest = 22,
+        SmallChest = 23,
+        StandardChest = 24,
+        Tier1Shotgun = 25,
+        Tier2Melee = 26,
+        Tier2Rifle = 27,
+        KnifePoints = 28,
+        PistolPoints = 29,
+        PistolPointsAlternate = 30,
+        ShotgunPoints = 31,
+        SmgPoints = 32,
+        SniperPoints = 33,
+        SubmachinePoints = 34,
+        VestPoints = 35
     }
 }
