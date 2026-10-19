@@ -17,6 +17,8 @@ MonoBehaviour:
   _slotZeroAngleDegrees: 0
   _clockwiseSlotOrder: 1
   _pointerAngleDegrees: 0
+  _slotRadiusRatio: 0.3
+  _slotSizeRatio: 0.17
   _slots:
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}

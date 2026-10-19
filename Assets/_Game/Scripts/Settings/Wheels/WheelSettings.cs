@@ -26,6 +26,14 @@ namespace VertigoWheel.Settings
         [Tooltip("Angle of the stationary pointer from up.")]
         private float _pointerAngleDegrees;
 
+        [SerializeField]
+        [Tooltip("Distance from the wheel center to each slot, relative to the wheel diameter.")]
+        private float _slotRadiusRatio = 0.30f;
+
+        [SerializeField]
+        [Tooltip("Slot size relative to the wheel diameter.")]
+        private float _slotSizeRatio = 0.17f;
+
         [Header("Fixed slots for exact-zone overrides")]
         [SerializeField]
         private WheelSlotSettings[] _slots = new WheelSlotSettings[WheelData.SlotCount];
@@ -112,6 +120,26 @@ namespace VertigoWheel.Settings
 
         public int SlotCount => _slots?.Length ?? 0;
 
+        public float SlotRadiusRatio
+        {
+            get => _slotRadiusRatio;
+            set
+            {
+                ValidateSlotRatio(value);
+                _slotRadiusRatio = value;
+            }
+        }
+
+        public float SlotSizeRatio
+        {
+            get => _slotSizeRatio;
+            set
+            {
+                ValidateSlotRatio(value);
+                _slotSizeRatio = value;
+            }
+        }
+
         public WheelSlotSettings GetSlot(int index)
         {
             ValidateSlotIndex(index);
@@ -138,6 +166,8 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
+            ValidateSlotRatio(_slotRadiusRatio);
+            ValidateSlotRatio(_slotSizeRatio);
             int bombCount = 0;
             for (int index = 0; index < _slots.Length; index++)
             {
@@ -190,6 +220,8 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
+            ValidateSlotRatio(_slotRadiusRatio);
+            ValidateSlotRatio(_slotSizeRatio);
             _pool.Validate();
         }
 
@@ -217,6 +249,14 @@ namespace VertigoWheel.Settings
             if (float.IsNaN(value) || float.IsInfinity(value))
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "Wheel angles must be finite.");
+            }
+        }
+
+        private static void ValidateSlotRatio(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0 || value > 0.5f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Slot ratios must be positive, finite, and at most 0.5.");
             }
         }
     }

@@ -1,0 +1,14 @@
+{
+  "name": "VertigoWheel.UI",
+  "rootNamespace": "VertigoWheel.UI",
+  "references": ["VertigoWheel.Core", "VertigoWheel.Settings", "Unity.ugui", "Unity.TextMeshPro"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

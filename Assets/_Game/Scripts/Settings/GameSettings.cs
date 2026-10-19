@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 using VertigoWheel.Core.Rewards;
 using VertigoWheel.Core.Runs;
@@ -23,6 +24,12 @@ namespace VertigoWheel.Settings
 
         [SerializeField]
         private WheelSettings _goldenWheel;
+
+        [SerializeField]
+        private AnimationSettings _animationSettings;
+
+        [SerializeField]
+        private Sprite _bombIcon;
 
         [SerializeField]
         private ZoneWheelOverrideSettings[] _zoneOverrides = Array.Empty<ZoneWheelOverrideSettings>();
@@ -69,6 +76,18 @@ namespace VertigoWheel.Settings
             set => _goldenWheel = value;
         }
 
+        public AnimationSettings AnimationSettings
+        {
+            get => _animationSettings;
+            set => _animationSettings = value;
+        }
+
+        public Sprite BombIcon
+        {
+            get => _bombIcon;
+            set => _bombIcon = value;
+        }
+
         public WheelSettings GetWheelSettings(ZoneType zoneType)
         {
             switch (zoneType)
@@ -87,6 +106,13 @@ namespace VertigoWheel.Settings
         public void Validate()
         {
             ValidateAndCreateRules();
+        }
+
+        /// <summary>Creates a detached lookup of the validated rewards referenced by active authoring sources.</summary>
+        public IReadOnlyDictionary<RewardId, RewardSettings> CreateRewardCatalog()
+        {
+            ValidateAndCreateRules(out Dictionary<RewardId, RewardSettings> rewards);
+            return new ReadOnlyDictionary<RewardId, RewardSettings>(rewards);
         }
 
         public ZoneRules CreateZoneRules()
@@ -120,6 +146,11 @@ namespace VertigoWheel.Settings
 
         private ZoneRules ValidateAndCreateRules()
         {
+            return ValidateAndCreateRules(out _);
+        }
+
+        private ZoneRules ValidateAndCreateRules(out Dictionary<RewardId, RewardSettings> rewards)
+        {
             if (_zoneSettings == null || _bronzeWheel == null || _silverWheel == null || _goldenWheel == null)
             {
                 throw new InvalidOperationException($"Game settings '{name}' needs zone settings and all three wheels.");
@@ -130,7 +161,7 @@ namespace VertigoWheel.Settings
             _silverWheel.ValidatePool();
             _goldenWheel.ValidatePool();
 
-            Dictionary<RewardId, RewardSettings> rewards = new Dictionary<RewardId, RewardSettings>();
+            rewards = new Dictionary<RewardId, RewardSettings>();
             ValidatePoolRewardIds(_bronzeWheel.Pool, rewards);
             ValidatePoolRewardIds(_silverWheel.Pool, rewards);
             ValidatePoolRewardIds(_goldenWheel.Pool, rewards);
