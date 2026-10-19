@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using VertigoWheel.Core.Rewards;
+using VertigoWheel.Core.Runs;
 using VertigoWheel.Core.Randomness;
 using VertigoWheel.Core.Wheels;
 using VertigoWheel.Core.Zones;
@@ -9,7 +10,7 @@ using VertigoWheel.Core.Zones;
 namespace VertigoWheel.Settings
 {
     [CreateAssetMenu(fileName = "GameSettings", menuName = "Vertigo Wheel/Settings/Game")]
-    public sealed class GameSettings : ScriptableObject
+    public sealed class GameSettings : ScriptableObject, IRunSettingsSource
     {
         [SerializeField]
         private ZoneSettings _zoneSettings;
@@ -86,6 +87,16 @@ namespace VertigoWheel.Settings
         public void Validate()
         {
             ValidateAndCreateRules();
+        }
+
+        public ZoneRules CreateZoneRules()
+        {
+            if (_zoneSettings == null)
+            {
+                throw new InvalidOperationException($"Game settings '{name}' needs zone settings.");
+            }
+
+            return _zoneSettings.CreateRules();
         }
 
         public WheelSettings GetWheelSettingsForZone(int zoneNumber)

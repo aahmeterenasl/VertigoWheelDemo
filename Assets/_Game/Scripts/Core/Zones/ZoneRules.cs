@@ -70,10 +70,18 @@ namespace VertigoWheel.Core.Zones
 
         public bool AllowsCashOut(int zoneNumber)
         {
-            ValidateZoneNumber(zoneNumber);
+            return AllowsCashOut(GetZoneType(zoneNumber));
+        }
 
-            return _cashOutPolicy == CashOutPolicy.AnyZone
-                || GetZoneType(zoneNumber) != ZoneType.Normal;
+        /// <summary>Evaluate current policy against an already prepared wheel's type.</summary>
+        public bool AllowsCashOut(ZoneType zoneType)
+        {
+            if (!Enum.IsDefined(typeof(ZoneType), zoneType))
+            {
+                throw new ArgumentOutOfRangeException(nameof(zoneType));
+            }
+
+            return _cashOutPolicy == CashOutPolicy.AnyZone || zoneType != ZoneType.Normal;
         }
 
         public int GetRewardTier(int zoneNumber)

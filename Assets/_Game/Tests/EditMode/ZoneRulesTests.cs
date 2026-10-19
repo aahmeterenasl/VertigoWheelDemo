@@ -116,6 +116,21 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => rules.GetRewardQuantity(1, 1, -1));
         }
 
+        [TestCase(ZoneType.Normal, false)]
+        [TestCase(ZoneType.Safe, true)]
+        [TestCase(ZoneType.Super, true)]
+        public void CashOutPolicy_CanEvaluateAnAlreadyPreparedWheelType(ZoneType zoneType, bool allowed)
+        {
+            ZoneRules rules = CreateRules(CashOutPolicy.SafeAndSuperZonesOnly);
+            Assert.That(rules.AllowsCashOut(zoneType), Is.EqualTo(allowed));
+        }
+
+        [Test]
+        public void UndefinedPreparedZoneType_IsRejectedEvenWithAnyZonePolicy()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => CreateRules().AllowsCashOut((ZoneType)999));
+        }
+
         private static ZoneRules CreateRules(CashOutPolicy cashOutPolicy = CashOutPolicy.AnyZone)
         {
             return new ZoneRules(5, 30, cashOutPolicy, 5, 1000);
