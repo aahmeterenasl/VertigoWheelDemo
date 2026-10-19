@@ -22,31 +22,42 @@ MonoBehaviour:
     _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}
     _baseQuantity: 100
     _quantityIncreasePerTier: 25
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
     _baseQuantity: 5
     _quantityIncreasePerTier: 1
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 360565de424dff74598558228bccb7f5, type: 2}
     _baseQuantity: 20
     _quantityIncreasePerTier: 5
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: a7cd22e616fee6345a132bcb0406208f, type: 2}
     _baseQuantity: 20
     _quantityIncreasePerTier: 5
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: a538a7eb37f8f234f9210b10c9dbe7a8, type: 2}
     _baseQuantity: 1
     _quantityIncreasePerTier: 1
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: d2cefe06eb300064da7ee0bae076ef9d, type: 2}
     _baseQuantity: 1
     _quantityIncreasePerTier: 1
+    _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: f4b8fef09c757a74e91bde1a5cb85cc8, type: 2}
     _baseQuantity: 1
     _quantityIncreasePerTier: 1
+    _landingWeight: 1
   - _outcomeKind: 1
     _reward: {fileID: 0}
     _baseQuantity: 0
     _quantityIncreasePerTier: 0
+    _landingWeight: 1
+  _pool: {fileID: 11400000, guid: 08da3d95516fe0a47b20b226c0adddfd, type: 2}
+  _bombSlotIndex: 7
+  _bombLandingWeight: 1

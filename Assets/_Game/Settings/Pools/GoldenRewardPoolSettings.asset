@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6d76ca22bec584a8eba08ea26af042, type: 3}
+  m_Name: GoldenRewardPoolSettings
+  m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.RewardPoolSettings
+  _entries:
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 100
+      _quantityIncreasePerTier: 10
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}
+      _baseQuantity: 5000
+      _quantityIncreasePerTier: 500
+      _landingWeight: 1
+    _poolWeight: 60
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 2b4a030e8e8bd554bacbcdc9cc22c3ee, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerTier: 1
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 030d7e86a5ed579418a531147d2dd45a, type: 2}
+      _baseQuantity: 3
+      _quantityIncreasePerTier: 1
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: ca15132020c4e8140ae5a524c8ba9e36, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 457e375417ec15b47b50e76828d9c8eb, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 7692fcc1c0cdf5b44b021a1c1b6b8107, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: e2d3796689f05fb44a90e9570a91b7d3, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 100
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 10
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 1000
+      _quantityIncreasePerTier: 0
+      _landingWeight: 1
+    _poolWeight: 1
+    _minimumTier: 0
+    _maximumTier: -1

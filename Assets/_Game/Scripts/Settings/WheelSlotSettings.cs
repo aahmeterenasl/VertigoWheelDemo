@@ -20,6 +20,23 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0)]
         private long _quantityIncreasePerTier = 1;
 
+        [SerializeField, Min(1)]
+        [Tooltip("Relative chance of landing on this displayed slot. Equal values give equal chances.")]
+        private int _landingWeight = 1;
+
+        public int LandingWeight
+        {
+            get => _landingWeight;
+            set
+            {
+                if (value < 1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+                _landingWeight = value;
+            }
+        }
+
         public SlotOutcomeKind OutcomeKind
         {
             get => _outcomeKind;
@@ -70,6 +87,11 @@ namespace VertigoWheel.Settings
 
         public void Validate()
         {
+            if (_landingWeight < 1)
+            {
+                throw new InvalidOperationException("Every displayed slot must have a positive landing weight.");
+            }
+
             if (!Enum.IsDefined(typeof(SlotOutcomeKind), _outcomeKind))
             {
                 throw new InvalidOperationException("A wheel slot has an unknown outcome kind.");
@@ -97,10 +119,11 @@ namespace VertigoWheel.Settings
         {
             Validate();
             return _outcomeKind == SlotOutcomeKind.Bomb
-                ? WheelSlotData.CreateBomb()
+                ? WheelSlotData.CreateBomb(_landingWeight)
                 : WheelSlotData.CreateReward(
                     _reward.RewardId,
-                    rules.GetRewardQuantity(zoneNumber, _baseQuantity, _quantityIncreasePerTier));
+                    rules.GetRewardQuantity(zoneNumber, _baseQuantity, _quantityIncreasePerTier),
+                    _landingWeight);
         }
     }
 }

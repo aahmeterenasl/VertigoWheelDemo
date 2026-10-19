@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using VertigoWheel.Core.Randomness;
 using VertigoWheel.Core.Wheels;
 using VertigoWheel.Core.Zones;
 
@@ -25,8 +26,51 @@ namespace VertigoWheel.Settings
         [Tooltip("Angle of the stationary pointer from up.")]
         private float _pointerAngleDegrees;
 
+        [Header("Fixed slots for exact-zone overrides")]
         [SerializeField]
         private WheelSlotSettings[] _slots = new WheelSlotSettings[WheelData.SlotCount];
+
+        [Header("Pool for fallback generation")]
+        [SerializeField]
+        private RewardPoolSettings _pool;
+
+        [SerializeField, Range(0, 7)]
+        private int _bombSlotIndex = 7;
+
+        [SerializeField, Min(1)]
+        private int _bombLandingWeight = 1;
+
+        public RewardPoolSettings Pool
+        {
+            get => _pool;
+            set => _pool = value;
+        }
+
+        public int BombSlotIndex
+        {
+            get => _bombSlotIndex;
+            set
+            {
+                if (value < 0 || value >= WheelData.SlotCount)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+                _bombSlotIndex = value;
+            }
+        }
+
+        public int BombLandingWeight
+        {
+            get => _bombLandingWeight;
+            set
+            {
+                if (value < 1)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+                _bombLandingWeight = value;
+            }
+        }
 
         public Sprite BaseSprite
         {
@@ -134,6 +178,30 @@ namespace VertigoWheel.Settings
             }
 
             return new WheelData(zoneNumber, zoneType, slots);
+        }
+
+        public void ValidatePool()
+        {
+            if (_baseSprite == null || _pointerSprite == null || _pool == null
+                || _bombSlotIndex < 0 || _bombSlotIndex >= WheelData.SlotCount || _bombLandingWeight < 1)
+            {
+                throw new InvalidOperationException($"Wheel '{name}' needs sprites, a pool, and valid bomb settings.");
+            }
+
+            ValidateFiniteAngle(_slotZeroAngleDegrees);
+            ValidateFiniteAngle(_pointerAngleDegrees);
+            _pool.Validate();
+        }
+
+        public WheelData CreateFromPool(int zoneNumber, ZoneRules rules, IRandomSource random)
+        {
+            if (rules == null)
+            {
+                throw new ArgumentNullException(nameof(rules));
+            }
+            ValidatePool();
+            return new WheelGenerator().Generate(zoneNumber, rules.GetZoneType(zoneNumber),
+                _pool.CreateEntries(zoneNumber, rules), random, _bombSlotIndex, _bombLandingWeight);
         }
 
         private void ValidateSlotIndex(int index)

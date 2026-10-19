@@ -16,3 +16,6 @@ MonoBehaviour:
   _bronzeWheel: {fileID: 11400000, guid: 3560da3215d508044895ad8f0003847b, type: 2}
   _silverWheel: {fileID: 11400000, guid: ef8e075c323dd8e4aa69079c211fa1c5, type: 2}
   _goldenWheel: {fileID: 11400000, guid: 5e7adbd672c8fb146b066afe2fba93ce, type: 2}
+  _zoneOverrides:
+  - _zoneNumber: 30
+    _wheel: {fileID: 11400000, guid: 00d67f91b13914b45819ef96ec70fed7, type: 2}

@@ -48,7 +48,7 @@ namespace VertigoWheel.Tests.EditMode
             game.SilverWheel.GetSlot(0).BaseQuantity = 500;
             game.GoldenWheel.GetSlot(0).BaseQuantity = 1000;
 
-            WheelData wheel = game.CreateWheelData(zoneNumber);
+            WheelData wheel = game.CreateWheelData(zoneNumber, new SequenceRandomSource(0));
             long baseQuantity = expected == ZoneType.Normal ? 100 : expected == ZoneType.Safe ? 500 : 1000;
 
             Assert.That(wheel.ZoneType, Is.EqualTo(expected));
@@ -60,9 +60,9 @@ namespace VertigoWheel.Tests.EditMode
         public void EditingSlots_ChangesFutureDataWithoutChangingExistingData()
         {
             GameSettings game = CreateGame();
-            WheelData previous = game.CreateWheelData(6);
+            WheelData previous = game.CreateWheelData(6, new SequenceRandomSource(0));
             game.BronzeWheel.GetSlot(0).BaseQuantity = 400;
-            WheelData updated = game.CreateWheelData(6);
+            WheelData updated = game.CreateWheelData(6, new SequenceRandomSource(0));
 
             Assert.That(previous.Slots[0].Quantity, Is.EqualTo(125));
             Assert.That(updated.Slots[0].Quantity, Is.EqualTo(425));
@@ -113,11 +113,12 @@ namespace VertigoWheel.Tests.EditMode
         public void Bombs_AreRejectedOnSafeAndSuperProfiles()
         {
             GameSettings game = CreateGame();
-            game.SilverWheel.SetSlot(3, CreateBomb());
+            game.SilverWheel.Pool.GetEntry(3).RewardSlot = CreateBomb();
             Assert.Throws<InvalidOperationException>(() => game.Validate());
 
             game.SilverWheel = CreateWheel(false);
-            game.GoldenWheel.SetSlot(4, CreateBomb());
+            AddPool(game.SilverWheel);
+            game.GoldenWheel.Pool.GetEntry(4).RewardSlot = CreateBomb();
             Assert.Throws<InvalidOperationException>(() => game.Validate());
         }
 
@@ -218,7 +219,7 @@ namespace VertigoWheel.Tests.EditMode
                 GameSettings game = CreateGame();
                 game.BronzeWheel.GetSlot(0).Reward = rewardId == RewardId.Cash ? _reward : CreateReward(rewardId);
 
-                Assert.That(game.CreateWheelData(1).Slots[0].RewardId, Is.EqualTo(rewardId));
+                Assert.That(game.CreateWheelData(1, new SequenceRandomSource(0)).Slots[0].RewardId, Is.EqualTo(rewardId));
             }
         }
 
@@ -228,6 +229,82 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentException>(() => _reward.DisplayName = " ");
             _reward.Icon = null;
             Assert.Throws<InvalidOperationException>(() => _reward.Validate());
+        }
+
+        [TestCase(5, 1)]
+        [TestCase(6, 2)]
+        [TestCase(10, 2)]
+        [TestCase(11, 1)]
+        public void PoolEntries_UseInclusiveTierBoundsAndZeroWeightDisablesThem(int zone, int expectedCount)
+        {
+            ZoneSettings zones = Create<ZoneSettings>();
+            RewardPoolSettings pool = Create<RewardPoolSettings>();
+            pool.SetEntries(new[]
+            {
+                new RewardPoolEntrySettings { RewardSlot = CreateRewardSlot(100), MinimumTier = 0, MaximumTier = 1 },
+                new RewardPoolEntrySettings { RewardSlot = CreateRewardSlot(1000), MinimumTier = 1 },
+                new RewardPoolEntrySettings { RewardSlot = CreateRewardSlot(50), PoolWeight = 0 }
+            });
+
+            Assert.That(pool.CreateEntries(zone, zones.CreateRules()).Count, Is.EqualTo(expectedCount));
+        }
+
+        [Test]
+        public void ExactZoneOverride_TakesPriorityAndDoesNotConsumeGenerationRandomness()
+        {
+            GameSettings game = CreateGame();
+            WheelSettings exact = CreateWheel(false);
+            exact.GetSlot(0).BaseQuantity = 1000;
+            game.SetZoneOverrides(new[] { new ZoneWheelOverrideSettings { ZoneNumber = 30, Wheel = exact } });
+            SequenceRandomSource random = new SequenceRandomSource(0);
+
+            WheelData wheel = game.CreateWheelData(30, random);
+
+            Assert.That(wheel.Slots[0].Quantity, Is.EqualTo(1125));
+            Assert.That(random.SamplesConsumed, Is.Zero);
+            Assert.That(game.GetWheelSettingsForZone(30), Is.SameAs(exact));
+            Assert.That(game.GetWheelSettingsForZone(60), Is.SameAs(game.GoldenWheel));
+            game.CreateWheelData(60, random);
+            Assert.That(random.SamplesConsumed, Is.EqualTo(8));
+        }
+
+        [Test]
+        public void DuplicateOverridesAndBombsInGoldenOverrides_AreRejected()
+        {
+            GameSettings game = CreateGame();
+            ZoneWheelOverrideSettings exact = new ZoneWheelOverrideSettings { ZoneNumber = 30, Wheel = CreateWheel(false) };
+            game.SetZoneOverrides(new[] { exact, exact });
+            Assert.Throws<InvalidOperationException>(() => game.Validate());
+            game.SetZoneOverrides(new[] { new ZoneWheelOverrideSettings { ZoneNumber = 30, Wheel = CreateWheel(true) } });
+            Assert.Throws<InvalidOperationException>(() => game.Validate());
+        }
+
+        [Test]
+        public void QuantitiesThatConvergeAtTheCap_CannotCreateRepeatedVisibleRewards()
+        {
+            GameSettings game = CreateGame();
+            game.ZoneSettings.MaximumRewardQuantity = 100;
+
+            Assert.Throws<InvalidOperationException>(() => game.CreateWheelData(5, new SequenceRandomSource(0)));
+        }
+
+        [Test]
+        public void InvalidTierRangesAndLandingWeights_AreRejected()
+        {
+            RewardPoolEntrySettings entry = new RewardPoolEntrySettings
+            {
+                RewardSlot = CreateRewardSlot(100), MinimumTier = 3, MaximumTier = 2
+            };
+            Assert.Throws<InvalidOperationException>(() => entry.Validate());
+            Assert.Throws<ArgumentOutOfRangeException>(() => entry.PoolWeight = -1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => entry.MinimumTier = -1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => entry.MaximumTier = -2);
+            Assert.Throws<ArgumentOutOfRangeException>(() => entry.RewardSlot.LandingWeight = 0);
+        }
+
+        private WheelSlotSettings CreateRewardSlot(long quantity)
+        {
+            return new WheelSlotSettings { Reward = _reward, BaseQuantity = quantity, QuantityIncreasePerTier = 0 };
         }
 
         private T Create<T>() where T : ScriptableObject
@@ -256,7 +333,7 @@ namespace VertigoWheel.Tests.EditMode
                 wheel.SetSlot(index, new WheelSlotSettings
                 {
                     Reward = _reward,
-                    BaseQuantity = 100,
+                    BaseQuantity = 100 + index,
                     QuantityIncreasePerTier = 25
                 });
             }
@@ -276,7 +353,26 @@ namespace VertigoWheel.Tests.EditMode
             game.BronzeWheel = CreateWheel(true);
             game.SilverWheel = CreateWheel(false);
             game.GoldenWheel = CreateWheel(false);
+            AddPool(game.BronzeWheel);
+            AddPool(game.SilverWheel);
+            AddPool(game.GoldenWheel);
             return game;
+        }
+
+        private void AddPool(WheelSettings wheel)
+        {
+            RewardPoolSettings pool = Create<RewardPoolSettings>();
+            List<RewardPoolEntrySettings> entries = new List<RewardPoolEntrySettings>();
+            for (int index = 0; index < wheel.SlotCount; index++)
+            {
+                if (wheel.GetSlot(index).OutcomeKind == SlotOutcomeKind.Reward)
+                {
+                    entries.Add(new RewardPoolEntrySettings { RewardSlot = wheel.GetSlot(index) });
+                }
+            }
+
+            pool.SetEntries(entries.ToArray());
+            wheel.Pool = pool;
         }
 
         private static WheelSlotSettings CreateBomb()

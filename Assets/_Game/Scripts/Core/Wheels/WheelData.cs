@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using VertigoWheel.Core.Zones;
+using VertigoWheel.Core.Rewards;
 
 namespace VertigoWheel.Core.Wheels
 {
@@ -36,6 +37,7 @@ namespace VertigoWheel.Core.Wheels
 
             WheelSlotData[] copy = (WheelSlotData[])slots.Clone();
             int bombCount = 0;
+            HashSet<(RewardId, long)> rewards = new HashSet<(RewardId, long)>();
             foreach (WheelSlotData slot in copy)
             {
                 if (slot == null)
@@ -46,6 +48,10 @@ namespace VertigoWheel.Core.Wheels
                 if (slot.OutcomeKind == SlotOutcomeKind.Bomb)
                 {
                     bombCount++;
+                }
+                else if (!rewards.Add((slot.RewardId, slot.Quantity)))
+                {
+                    throw new ArgumentException("A wheel cannot repeat the same reward and final quantity.", nameof(slots));
                 }
             }
 

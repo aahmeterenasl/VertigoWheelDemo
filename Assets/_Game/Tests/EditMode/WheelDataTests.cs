@@ -91,7 +91,7 @@ namespace VertigoWheel.Tests.EditMode
             WheelSlotData[] slots = new WheelSlotData[WheelData.SlotCount];
             for (int index = 0; index < slots.Length; index++)
             {
-                slots[index] = WheelSlotData.CreateReward(RewardId.Cash, 100);
+                slots[index] = WheelSlotData.CreateReward(RewardId.Cash, 100 + index);
             }
 
             return slots;
