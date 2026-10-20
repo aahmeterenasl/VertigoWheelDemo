@@ -36,47 +36,59 @@ namespace VertigoWheel.Tests.EditMode
             Object.DestroyImmediate(_settings);
         }
 
-        [TestCase(1, 1)]
-        [TestCase(5, 1)]
-        [TestCase(29, 25)]
-        [TestCase(30, 26)]
-        [TestCase(int.MaxValue, int.MaxValue - 8)]
-        public void Window_ContainsCurrentZoneWithoutInvalidNumbers(int current, int first)
+        [TestCase(1)]
+        [TestCase(3)]
+        [TestCase(5)]
+        [TestCase(7)]
+        [TestCase(15)]
+        [TestCase(29)]
+        [TestCase(30)]
+        [TestCase(int.MaxValue)]
+        public void Window_KeepsCurrentCenteredAndHidesOutOfRangeNumbers(int current)
         {
             _view.Render(current, Rules());
-            TMP_Text[] labels = _view.GetComponentsInChildren<TMP_Text>();
-            Assert.That(labels.Length, Is.EqualTo(9));
-            for (int index = 0; index < labels.Length; index++)
+            ZoneItemView[] items = _view.GetComponentsInChildren<ZoneItemView>(true);
+            Assert.That(items.Length, Is.EqualTo(13));
+            for (int index = 0; index < items.Length; index++)
             {
-                Assert.That(labels[index].text, Is.EqualTo(((long)first + index).ToString()));
+                long zone = (long)current - 6 + index;
+                bool valid = zone >= 1 && zone <= int.MaxValue;
+                Assert.That(items[index].gameObject.activeSelf, Is.EqualTo(valid));
+                if (valid)
+                {
+                    Assert.That(items[index].GetComponentInChildren<TMP_Text>().text, Is.EqualTo(zone.ToString()));
+                }
             }
+            TMP_Text[] labels = Labels();
             Assert.That(labels.Count(t => t.fontStyle == FontStyles.Bold), Is.EqualTo(1));
             Assert.That(labels.Single(t => t.fontStyle == FontStyles.Bold).text, Is.EqualTo(current.ToString()));
+            Assert.That(((RectTransform)items[6].transform).anchorMin.x, Is.EqualTo(6f / 13f).Within(.0001f));
+            Assert.That(((RectTransform)items[6].transform).anchorMax.x, Is.EqualTo(7f / 13f).Within(.0001f));
         }
 
         [Test]
         public void Refresh_ReusesItemsAndUsesCurrentRulesWithSuperPriority()
         {
-            int[] itemIds = _view.GetComponentsInChildren<ZoneItemView>().Select(v => v.GetInstanceID()).ToArray();
+            int[] itemIds = _view.GetComponentsInChildren<ZoneItemView>(true).Select(v => v.GetInstanceID()).ToArray();
             _view.Render(29, Rules());
-            TMP_Text[] labels = _view.GetComponentsInChildren<TMP_Text>();
+            TMP_Text[] labels = Labels();
             Assert.That(labels.Single(t => t.text == "30").color, Is.EqualTo(_settings.SuperColor));
-            Assert.That(labels.Single(t => t.text == "25").color, Is.EqualTo(_settings.SafeColor));
+            Assert.That(labels.Single(t => t.text == "25").color, Is.EqualTo(Completed(_settings.SafeColor)));
 
             _view.Render(5, new ZoneRules(3, 6, CashOutPolicy.AnyZone, 5, 1000000000));
-            labels = _view.GetComponentsInChildren<TMP_Text>();
-            Assert.That(labels.Single(t => t.text == "3").color, Is.EqualTo(_settings.SafeColor));
+            labels = Labels();
+            Assert.That(labels.Single(t => t.text == "3").color, Is.EqualTo(Completed(_settings.SafeColor)));
             Assert.That(labels.Single(t => t.text == "6").color, Is.EqualTo(_settings.SuperColor));
-            Assert.That(_view.GetComponentsInChildren<ZoneItemView>().Select(v => v.GetInstanceID()), Is.EqualTo(itemIds));
+            Assert.That(_view.GetComponentsInChildren<ZoneItemView>(true).Select(v => v.GetInstanceID()), Is.EqualTo(itemIds));
         }
 
         [Test]
         public void InvalidZone_DoesNotPartiallyRebindTrack()
         {
             _view.Render(1, Rules());
-            string[] previous = _view.GetComponentsInChildren<TMP_Text>().Select(t => t.text).ToArray();
+            string[] previous = Labels().Select(t => t.text).ToArray();
             Assert.Throws<ArgumentOutOfRangeException>(() => _view.Render(0, Rules()));
-            Assert.That(_view.GetComponentsInChildren<TMP_Text>().Select(t => t.text), Is.EqualTo(previous));
+            Assert.That(Labels().Select(t => t.text), Is.EqualTo(previous));
         }
 
         [Test]
@@ -86,15 +98,36 @@ namespace VertigoWheel.Tests.EditMode
             Sprite background = _settings.BackgroundSprite;
             _settings.BackgroundSprite = null;
             _view.Render(30, Rules());
-            TMP_Text[] labels = _view.GetComponentsInChildren<TMP_Text>();
+            TMP_Text[] labels = Labels();
             Assert.That(labels.Single(t => t.fontStyle == FontStyles.Bold).text, Is.EqualTo("30"));
-            Assert.That(labels.Single(t => t.text == "30").color, Is.EqualTo(_settings.SuperColor));
+            Assert.That(labels.Single(t => t.text == "30").color, Is.EqualTo(_settings.CurrentNumberColor));
             Assert.That(_view.GetComponentsInChildren<UnityEngine.UI.Image>().All(i => i.sprite != null), Is.True);
 
             _settings.BackgroundSprite = background;
             _settings.SafeColor = Color.cyan;
             _view.Render(29, Rules());
-            Assert.That(labels.Single(t => t.text == "25").color, Is.EqualTo(Color.cyan));
+            Assert.That(labels.Single(t => t.text == "25").color, Is.EqualTo(Completed(Color.cyan)));
+        }
+
+        [TestCase(3, ZoneType.Normal)]
+        [TestCase(5, ZoneType.Safe)]
+        [TestCase(30, ZoneType.Super)]
+        public void CurrentMarker_UsesZoneStyleAndCompletedNumbersAreDimmed(int current, ZoneType type)
+        {
+            _view.Render(current, Rules());
+            var marker = _view.transform.Find("ui_image_current_zone").GetComponent<UnityEngine.UI.Image>();
+            Sprite expected = type == ZoneType.Super ? _settings.SuperCurrentBackgroundSprite
+                : type == ZoneType.Safe ? _settings.SafeCurrentBackgroundSprite : _settings.CurrentBackgroundSprite;
+            Assert.That(marker.sprite, Is.SameAs(expected));
+            Assert.That(marker.color, Is.EqualTo(type == ZoneType.Super ? _settings.SuperColor : Color.white));
+            TMP_Text[] labels = Labels();
+            Assert.That(labels.Single(t => t.text == (current - 1).ToString()).color.a,
+                Is.EqualTo(_settings.NormalColor.a * _settings.CompletedOpacity));
+            Assert.That(labels.Single(t => t.text == (current + 1).ToString()).color.a, Is.EqualTo(1f));
+            if (type != ZoneType.Safe)
+            {
+                Assert.That(labels.Single(t => t.text == current.ToString()).color, Is.EqualTo(_settings.CurrentNumberColor));
+            }
         }
 
         [Test]
@@ -105,5 +138,14 @@ namespace VertigoWheel.Tests.EditMode
         }
 
         private static ZoneRules Rules() => new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 1000000000);
+
+        private TMP_Text[] Labels() => _view.GetComponentsInChildren<ZoneItemView>()
+            .Select(item => item.GetComponentInChildren<TMP_Text>()).ToArray();
+
+        private Color Completed(Color color)
+        {
+            color.a *= _settings.CompletedOpacity;
+            return color;
+        }
     }
 }

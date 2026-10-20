@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: ZoneTrackSettings
   m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.ZoneTrackSettings
   _backgroundSprite: {fileID: 21300000, guid: 3e3b212504d778b4199b86eea7871a3a, type: 3}
-  _currentBackgroundSprite: {fileID: 21300000, guid: 4c6441296ba2bbd4ab07e3cb85bb6363, type: 3}
-  _normalColor: {r: 0.85, g: 0.89, b: 0.93, a: 1}
-  _safeColor: {r: 0.48, g: 0.94, b: 0.38, a: 1}
-  _superColor: {r: 1, g: 0.77, b: 0.16, a: 1}
+  _currentBackgroundSprite: {fileID: 21300000, guid: 2e81f8f39ff690542adadc73b0ff542a, type: 3}
+  _safeCurrentBackgroundSprite: {fileID: 21300000, guid: 43cc21b28963eff4693c596da3d4dff2, type: 3}
+  _superCurrentBackgroundSprite: {fileID: 21300000, guid: 2e81f8f39ff690542adadc73b0ff542a, type: 3}
+  _currentNumberColor: {r: 0, g: 0, b: 0, a: 1}
+  _completedOpacity: 0.35
+  _normalColor: {r: 1, g: 1, b: 1, a: 1}
+  _safeColor: {r: 0.65, g: 1, b: 0.26, a: 1}
+  _superColor: {r: 1, g: 0.78, b: 0.2, a: 1}

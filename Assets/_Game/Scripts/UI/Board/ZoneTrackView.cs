@@ -14,8 +14,18 @@ namespace VertigoWheel.UI.Board
         [SerializeField]
         private ZoneItemView[] _items = Array.Empty<ZoneItemView>();
 
+        [SerializeField]
+        private UnityEngine.UI.Image _background;
+
+        [SerializeField]
+        private UnityEngine.UI.Image _currentBackground;
+
         private Sprite _backgroundSprite;
         private Sprite _currentBackgroundSprite;
+        private Sprite _safeCurrentBackgroundSprite;
+        private Sprite _superCurrentBackgroundSprite;
+        private Color _currentNumberColor;
+        private float _completedOpacity;
         private Color _normalColor;
         private Color _safeColor;
         private Color _superColor;
@@ -31,7 +41,8 @@ namespace VertigoWheel.UI.Board
             {
                 throw new ArgumentNullException(nameof(rules));
             }
-            if (_items == null || _items.Length == 0)
+            if (_items == null || _items.Length == 0 || _items.Length % 2 == 0
+                || _background == null || _currentBackground == null)
             {
                 throw new InvalidOperationException("The zone track needs settings and its reusable item references.");
             }
@@ -43,15 +54,34 @@ namespace VertigoWheel.UI.Board
                 }
             }
             CaptureStyle();
-            long first = Math.Max(1L, Math.Min((long)currentZone - _items.Length / 2,
-                (long)int.MaxValue - _items.Length + 1L));
+            ZoneType currentType = rules.GetZoneType(currentZone);
+            _background.sprite = _backgroundSprite;
+            _currentBackground.sprite = currentType == ZoneType.Super ? _superCurrentBackgroundSprite
+                : currentType == ZoneType.Safe ? _safeCurrentBackgroundSprite : _currentBackgroundSprite;
+            _currentBackground.color = currentType == ZoneType.Super ? _superColor : Color.white;
+            long first = (long)currentZone - _items.Length / 2;
             for (int index = 0; index < _items.Length; index++)
             {
-                int zone = (int)(first + index);
+                long candidate = first + index;
+                bool visible = candidate >= 1 && candidate <= int.MaxValue;
+                _items[index].gameObject.SetActive(visible);
+                if (!visible)
+                {
+                    continue;
+                }
+                int zone = (int)candidate;
                 ZoneType type = rules.GetZoneType(zone);
                 Color color = type == ZoneType.Super ? _superColor : type == ZoneType.Safe ? _safeColor : _normalColor;
                 bool isCurrent = zone == currentZone;
-                _items[index].Bind(zone, isCurrent, isCurrent ? _currentBackgroundSprite : _backgroundSprite, color);
+                if (isCurrent && type != ZoneType.Safe)
+                {
+                    color = _currentNumberColor;
+                }
+                else if (zone < currentZone)
+                {
+                    color.a *= _completedOpacity;
+                }
+                _items[index].Bind(zone, isCurrent, color);
             }
         }
 
@@ -74,6 +104,10 @@ namespace VertigoWheel.UI.Board
             }
             _backgroundSprite = _settings.BackgroundSprite;
             _currentBackgroundSprite = _settings.CurrentBackgroundSprite;
+            _safeCurrentBackgroundSprite = _settings.SafeCurrentBackgroundSprite;
+            _superCurrentBackgroundSprite = _settings.SuperCurrentBackgroundSprite;
+            _currentNumberColor = _settings.CurrentNumberColor;
+            _completedOpacity = _settings.CompletedOpacity;
             _normalColor = _settings.NormalColor;
             _safeColor = _settings.SafeColor;
             _superColor = _settings.SuperColor;

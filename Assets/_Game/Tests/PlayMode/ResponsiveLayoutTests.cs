@@ -148,7 +148,7 @@ namespace VertigoWheel.Tests.PlayMode
                     Assert.That(scroll.content.rect.height, Is.GreaterThan(scroll.viewport.rect.height));
                     UnityEngine.UI.ScrollRect summaryScroll = _summary.GetComponentInChildren<UnityEngine.UI.ScrollRect>();
                     Assert.That(summaryScroll.content.rect.height, Is.GreaterThan(summaryScroll.viewport.rect.height));
-                    Assert.That(_board.transform.Find("ui_panel_zone_track").GetComponentsInChildren<ZoneItemView>().Length, Is.EqualTo(9));
+                    Assert.That(_board.transform.Find("ui_panel_zone_track").GetComponentsInChildren<ZoneItemView>(true).Length, Is.EqualTo(13));
                 }
             }
         }

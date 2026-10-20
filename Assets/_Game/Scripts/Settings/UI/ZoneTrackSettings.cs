@@ -13,6 +13,18 @@ namespace VertigoWheel.Settings
         private Sprite _currentBackgroundSprite;
 
         [SerializeField]
+        private Sprite _safeCurrentBackgroundSprite;
+
+        [SerializeField]
+        private Sprite _superCurrentBackgroundSprite;
+
+        [SerializeField]
+        private Color _currentNumberColor = Color.black;
+
+        [SerializeField, Range(0f, 1f)]
+        private float _completedOpacity = 0.35f;
+
+        [SerializeField]
         private Color _normalColor = new Color(0.85f, 0.89f, 0.93f);
 
         [SerializeField]
@@ -31,6 +43,38 @@ namespace VertigoWheel.Settings
         {
             get => _currentBackgroundSprite;
             set => _currentBackgroundSprite = value;
+        }
+
+        public Sprite SafeCurrentBackgroundSprite
+        {
+            get => _safeCurrentBackgroundSprite;
+            set => _safeCurrentBackgroundSprite = value;
+        }
+
+        public Sprite SuperCurrentBackgroundSprite
+        {
+            get => _superCurrentBackgroundSprite;
+            set => _superCurrentBackgroundSprite = value;
+        }
+
+        public Color CurrentNumberColor
+        {
+            get => _currentNumberColor;
+            set
+            {
+                ValidateColor(value);
+                _currentNumberColor = value;
+            }
+        }
+
+        public float CompletedOpacity
+        {
+            get => _completedOpacity;
+            set
+            {
+                ValidateOpacity(value);
+                _completedOpacity = value;
+            }
         }
 
         public Color NormalColor
@@ -65,13 +109,24 @@ namespace VertigoWheel.Settings
 
         public void Validate()
         {
-            if (_backgroundSprite == null || _currentBackgroundSprite == null)
+            if (_backgroundSprite == null || _currentBackgroundSprite == null
+                || _safeCurrentBackgroundSprite == null || _superCurrentBackgroundSprite == null)
             {
                 throw new InvalidOperationException("The zone track needs background and current-zone sprites.");
             }
             ValidateColor(_normalColor);
             ValidateColor(_safeColor);
             ValidateColor(_superColor);
+            ValidateColor(_currentNumberColor);
+            ValidateOpacity(_completedOpacity);
+        }
+
+        private static void ValidateOpacity(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f || value > 1f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Completed-zone opacity must be between zero and one.");
+            }
         }
 
         private static void ValidateColor(Color value)
