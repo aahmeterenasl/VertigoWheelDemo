@@ -180,6 +180,28 @@ namespace VertigoWheel.Tests.EditMode
                 Is.EqualTo("Gold"));
         }
 
+        [TestCase("RewardRowView", "1,463", false)]
+        [TestCase("RewardTileView", "x1,463", true)]
+        public void AuthoredRewardItems_BindTheirOwnQuantityFormat(string prefabName, string expected, bool hasName)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Game/Prefabs/UI/Rewards/" + prefabName + ".prefab");
+            Assert.That(prefab, Is.Not.Null);
+            GameObject instance = Object.Instantiate(prefab, _canvasRoot.transform, false);
+            RewardItemView item = instance.GetComponent<RewardItemView>();
+
+            item.Bind(_catalog[RewardId.Cash], 1463);
+
+            Assert.That(instance.transform.Find("ui_text_reward_quantity_value").GetComponent<TMP_Text>().text,
+                Is.EqualTo(expected));
+            Transform name = instance.transform.Find("ui_text_reward_name_value");
+            Assert.That(name != null, Is.EqualTo(hasName));
+            if (hasName)
+            {
+                Assert.That(name.GetComponent<TMP_Text>().text, Is.EqualTo("Cash"));
+            }
+        }
+
         [Test]
         public void BoardRender_UsesPreparedZoneAndBlocksControlsAndMomentumBehindModal()
         {

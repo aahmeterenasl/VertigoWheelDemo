@@ -12,11 +12,14 @@ namespace VertigoWheel.UI.Rewards
         [SerializeField]
         private UnityEngine.UI.Image _icon;
 
-        [SerializeField]
+        [SerializeField, Tooltip("Optional label used by reward tiles; compact rows omit it.")]
         private TMP_Text _name;
 
         [SerializeField]
         private TMP_Text _quantity;
+
+        [SerializeField]
+        private bool _showQuantityPrefix = true;
 
         public void Bind(RewardSettings reward, long quantity)
         {
@@ -33,15 +36,19 @@ namespace VertigoWheel.UI.Rewards
 
             _icon.sprite = reward.Icon;
             _icon.preserveAspect = true;
-            _name.text = reward.DisplayName;
-            _quantity.text = "x" + quantity.ToString("N0", CultureInfo.InvariantCulture);
+            if (_name != null)
+            {
+                _name.text = reward.DisplayName;
+            }
+            _quantity.text = (_showQuantityPrefix ? "x" : string.Empty)
+                + quantity.ToString("N0", CultureInfo.InvariantCulture);
         }
 
         internal void ValidateReferences()
         {
-            if (_icon == null || _name == null || _quantity == null)
+            if (_icon == null || _quantity == null)
             {
-                throw new InvalidOperationException("A reward item is missing its icon, name, or quantity reference.");
+                throw new InvalidOperationException("A reward item is missing its icon or quantity reference.");
             }
         }
     }
