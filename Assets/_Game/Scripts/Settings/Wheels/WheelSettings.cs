@@ -16,6 +16,9 @@ namespace VertigoWheel.Settings
         private Sprite _pointerSprite;
 
         [SerializeField]
+        private Color _spinButtonColor = Color.white;
+
+        [SerializeField]
         [Tooltip("Angle of slot zero from up; positive angles are counterclockwise.")]
         private float _slotZeroAngleDegrees;
 
@@ -92,6 +95,16 @@ namespace VertigoWheel.Settings
             set => _pointerSprite = value;
         }
 
+        public Color SpinButtonColor
+        {
+            get => _spinButtonColor;
+            set
+            {
+                ValidateSpinButtonColor(value);
+                _spinButtonColor = value;
+            }
+        }
+
         public float SlotZeroAngleDegrees
         {
             get => _slotZeroAngleDegrees;
@@ -166,6 +179,7 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
+            ValidateSpinButtonColor(_spinButtonColor);
             ValidateSlotRatio(_slotRadiusRatio);
             ValidateSlotRatio(_slotSizeRatio);
             int bombCount = 0;
@@ -220,6 +234,7 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
+            ValidateSpinButtonColor(_spinButtonColor);
             ValidateSlotRatio(_slotRadiusRatio);
             ValidateSlotRatio(_slotSizeRatio);
             _pool.Validate();
@@ -257,6 +272,18 @@ namespace VertigoWheel.Settings
             if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0 || value > 0.5f)
             {
                 throw new ArgumentOutOfRangeException(nameof(value), "Slot ratios must be positive, finite, and at most 0.5.");
+            }
+        }
+
+        private static void ValidateSpinButtonColor(Color value)
+        {
+            for (int channel = 0; channel < 4; channel++)
+            {
+                float component = value[channel];
+                if (float.IsNaN(component) || float.IsInfinity(component) || component < 0f || component > 1f)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), "Spin button color channels must be finite and between zero and one.");
+                }
             }
         }
     }

@@ -1,9 +1,12 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using VertigoWheel.Core.Wheels;
+using VertigoWheel.Core.Randomness;
+using VertigoWheel.Core.Runs;
 using VertigoWheel.Settings;
 using VertigoWheel.UI.Wheel;
 using Object = UnityEngine.Object;
@@ -68,6 +71,33 @@ namespace VertigoWheel.Tests.EditMode
             Object.DestroyImmediate(_view.gameObject);
             CreateUnboundView();
             ResizeAndAssert(new Vector2(580f, 580f));
+        }
+
+        [Test]
+        public void BoundWheel_UsesProfileSpinColorWithoutChangingTheSharedMaterialOrButtonGeometry()
+        {
+            GameSettings game = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/_Game/Settings/GameSettings.asset");
+            var rewards = AssetDatabase.FindAssets("t:RewardSettings", new[] { "Assets/_Game/Settings/Rewards" })
+                .Select(id => AssetDatabase.LoadAssetAtPath<RewardSettings>(AssetDatabase.GUIDToAssetPath(id)))
+                .ToDictionary(reward => reward.RewardId);
+            var button = _view.transform.Find("ui_button_spin").GetComponent<UnityEngine.UI.Button>();
+            Material shared = _prefab.transform.Find("ui_button_spin").GetComponent<UnityEngine.UI.Image>().material;
+            Vector2 size = ((RectTransform)button.transform).sizeDelta;
+
+            foreach (int zone in new[] { 1, 5, 30, 60 })
+            {
+                var run = new RunSession(game, new SystemRandomSource(14), new SystemRandomSource(37), zone);
+                WheelSettings profile = game.GetWheelSettingsForZone(zone);
+                _view.Bind(run.Wheel, profile, rewards, game.BombIcon);
+                _view.SetSpinInteractable(true);
+
+                Assert.That(button.image.color, Is.EqualTo(profile.SpinButtonColor), "Zone " + zone);
+                Assert.That(button.image.material, Is.SameAs(shared), "Tinting must not create per-wheel materials.");
+                Assert.That(shared.shader.name, Is.EqualTo("VertigoWheel/UI/SpinButton"));
+                Assert.That(((RectTransform)button.transform).sizeDelta, Is.EqualTo(size));
+                Assert.That(button.interactable, Is.True);
+                Assert.That(button.onClick.GetPersistentEventCount(), Is.Zero);
+            }
         }
 
         private void CreateUnboundView()

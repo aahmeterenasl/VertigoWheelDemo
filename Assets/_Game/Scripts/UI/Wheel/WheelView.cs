@@ -56,7 +56,7 @@ namespace VertigoWheel.UI.Wheel
                 throw new ArgumentNullException("Wheel data, visual settings, and reward catalog are required.");
             }
             CacheButton();
-            if (_rotationRoot == null || _baseImage == null || _pointer == null || _spinButton == null
+            if (_rotationRoot == null || _baseImage == null || _pointer == null || _spinButton == null || _spinButton.image == null
                 || _slots == null || _slots.Length != WheelData.SlotCount)
             {
                 throw new InvalidOperationException("The wheel prefab is missing required view references.");
@@ -92,6 +92,7 @@ namespace VertigoWheel.UI.Wheel
             CaptureGeometry(settings);
             _baseImage.sprite = settings.BaseSprite;
             _pointer.sprite = settings.PointerSprite;
+            _spinButton.image.color = settings.SpinButtonColor;
             for (int index = 0; index < _slots.Length; index++)
             {
                 WheelSlotData slot = wheel.Slots[index];
@@ -190,6 +191,10 @@ namespace VertigoWheel.UI.Wheel
                     return;
                 }
                 CaptureGeometry(_wheelSettings);
+                if (_spinButton.image != null)
+                {
+                    _spinButton.image.color = _wheelSettings.SpinButtonColor;
+                }
             }
 
             Rect rect = ((RectTransform)transform).rect;

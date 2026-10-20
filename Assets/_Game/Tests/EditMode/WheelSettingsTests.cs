@@ -94,6 +94,23 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<InvalidOperationException>(() => wheel.Validate(ZoneType.Safe));
         }
 
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(-0.1f)]
+        [TestCase(1.1f)]
+        public void SpinButtonColor_RejectsInvalidChannelsFromPropertiesAndInspector(float channel)
+        {
+            WheelSettings wheel = CreateGame().BronzeWheel;
+            Color invalid = new Color(channel, 1f, 1f, 1f);
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.SpinButtonColor = invalid);
+
+            SerializedObject serialized = new SerializedObject(wheel);
+            serialized.FindProperty("_spinButtonColor").colorValue = invalid;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.Validate(ZoneType.Normal));
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.ValidatePool());
+        }
+
         [Test]
         public void SerializedSlotCountAndMissingSlot_AreValidated()
         {
