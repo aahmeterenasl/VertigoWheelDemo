@@ -112,7 +112,7 @@ namespace VertigoWheel.Tests.PlayMode
             ClickSpin();
             ClickBoardExit();
             Assert.That(_run.PendingSpin, Is.Null);
-            ClickAction(_exit, "Keep Playing");
+            ClickAction(_exit, "Go Back");
 
             Assert.That(_exit.gameObject.activeSelf, Is.False);
             Assert.That(_run.Wheel, Is.SameAs(prepared));
