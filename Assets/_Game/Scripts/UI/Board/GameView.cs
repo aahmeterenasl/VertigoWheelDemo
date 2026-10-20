@@ -46,6 +46,9 @@ namespace VertigoWheel.UI.Board
         [SerializeField]
         private CanvasGroup _boardGroup;
 
+        [SerializeField]
+        private ZoneTrackView _zoneTrack;
+
         private ActionButtonView _listenedExitButton;
 
         public WheelView Wheel => _wheel;
@@ -69,6 +72,7 @@ namespace VertigoWheel.UI.Board
                 throw new ArgumentNullException(nameof(rules));
             }
             ValidateReferences();
+            _zoneTrack.Render(snapshot.ZoneNumber, rules);
             _rewards.SetRewards(snapshot.Rewards, catalog, resetScroll);
             _zoneLabel.text = "ZONE " + snapshot.ZoneNumber.ToString(CultureInfo.InvariantCulture);
             _zoneTypeLabel.text = snapshot.Wheel.ZoneType == ZoneType.Super ? "SUPER ZONE"
@@ -129,7 +133,7 @@ namespace VertigoWheel.UI.Board
         {
             if (_wheel == null || _wheelAnimator == null || _exitButton == null || _rewards == null
                 || _zoneLabel == null || _zoneTypeLabel == null || _nextSafeLabel == null
-                || _nextSuperLabel == null || _statusLabel == null || _boardGroup == null)
+                || _nextSuperLabel == null || _statusLabel == null || _boardGroup == null || _zoneTrack == null)
             {
                 throw new InvalidOperationException("The board is missing required wheel, controls, ledger, or label references.");
             }

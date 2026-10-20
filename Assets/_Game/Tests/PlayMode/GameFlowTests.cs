@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using TMPro;
@@ -307,6 +308,28 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
             Assert.That(_exit.gameObject.activeSelf, Is.False);
             Assert.That(_reward.gameObject.activeSelf, Is.False);
+        }
+
+        [Test]
+        public void IncompleteZoneStyleEdit_DoesNotInterruptSettlementOrContinue()
+        {
+            ZoneTrackView track = FindInScene<ZoneTrackView>();
+            ZoneTrackSettings style = Clone(ReadField<ZoneTrackSettings>(track, "_settings"));
+            WriteField(track, "_settings", style);
+            SpinTicket ticket = StartRewardSpin();
+            style.BackgroundSprite = null;
+            style.CurrentBackgroundSprite = null;
+
+            _controller.Resume();
+            Assert.That(_reward.IsReady, Is.True);
+            AssertRewardSettledOnce(ticket);
+            ClickAction(_reward);
+
+            Assert.That(_run.State, Is.EqualTo(RunState.Ready));
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+            AssertRewardSettledOnce(ticket);
+            Assert.That(track.GetComponentsInChildren<TMP_Text>().Single(t => t.fontStyle == FontStyles.Bold).text,
+                Is.EqualTo("2"));
         }
 
         [Test]

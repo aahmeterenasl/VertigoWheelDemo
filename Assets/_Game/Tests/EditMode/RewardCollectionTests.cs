@@ -206,6 +206,10 @@ namespace VertigoWheel.Tests.EditMode
             SetField(board, "_nextSuperLabel", super);
             SetField(board, "_statusLabel", AddText("ui_text_status", boardObject.transform));
             SetField(board, "_boardGroup", boardGroup);
+            GameObject trackPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Game/Prefabs/UI/Board/ZoneTrackView.prefab");
+            Assert.That(trackPrefab, Is.Not.Null);
+            SetField(board, "_zoneTrack", Object.Instantiate(trackPrefab, boardObject.transform, false).GetComponent<ZoneTrackView>());
             RunSession session = new RunSession(settings, new SystemRandomSource(12), new SystemRandomSource(34), 29);
             wheel.Bind(session.Wheel, settings.GetWheelSettingsForZone(29), _catalog, settings.BombIcon);
 
