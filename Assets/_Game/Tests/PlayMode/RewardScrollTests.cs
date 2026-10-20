@@ -12,6 +12,7 @@ using VertigoWheel.Core.Rewards;
 using VertigoWheel.Settings;
 using VertigoWheel.UI.Board;
 using VertigoWheel.UI.Common;
+using VertigoWheel.UI.Dialogs;
 using VertigoWheel.UI.Rewards;
 using Object = UnityEngine.Object;
 
@@ -118,6 +119,43 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_scroll.content.GetChild(0).GetInstanceID(), Is.EqualTo(firstItemId));
             Assert.That(_scroll.verticalNormalizedPosition, Is.EqualTo(movedPosition).Within(0.001f));
             Assert.That(Vector3.Distance(_exit.position, exitPosition), Is.LessThan(0.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator BombPanel_ScrollsLostRewardsWhileBoardStaysBlocked_AndClearsOnNextShow()
+        {
+            var bomb = _scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BombResultView>(true)).Single();
+            var animation = ScriptableObject.CreateInstance<AnimationSettings>();
+            animation.DialogDurationSeconds = 0;
+            try
+            {
+                _board.SetBoardBlocked(true);
+                bomb.Show(_icon, _catalog.Keys.Select(id => new RewardAmount(id, 10)).ToArray(), _catalog, animation);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                var list = bomb.GetComponentInChildren<RewardCollectionView>();
+                var scroll = list.GetComponent<UnityEngine.UI.ScrollRect>();
+                Assert.That(scroll.enabled, Is.True);
+                Assert.That(scroll.content.rect.height, Is.GreaterThan(scroll.viewport.rect.height));
+                Assert.That(bomb.GetComponentsInChildren<ActionButtonView>().Any(b => b.name == "ui_button_exit"), Is.False);
+                Assert.That(_scroll.enabled, Is.False);
+                Assert.That(_exit.GetComponent<UnityEngine.UI.Button>().IsInteractable(), Is.False);
+                float before = scroll.verticalNormalizedPosition;
+                scroll.OnScroll(new PointerEventData(EventSystem.current) {scrollDelta = new Vector2(0, -12)});
+                yield return null;
+                Assert.That(scroll.verticalNormalizedPosition, Is.LessThan(before - .001f));
+                bomb.Hide();
+                Assert.That(scroll.enabled, Is.False);
+                Assert.That(scroll.velocity, Is.EqualTo(Vector2.zero));
+                bomb.Show(_icon, Array.Empty<RewardAmount>(), _catalog, animation);
+                Assert.That(list.GetComponentsInChildren<RewardItemView>().Length, Is.Zero,
+                    "A later empty run must not show the previous run's rewards.");
+            }
+            finally
+            {
+                bomb.Hide();
+                Object.Destroy(animation);
+            }
         }
 
         [UnityTest]

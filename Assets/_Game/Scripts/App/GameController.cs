@@ -25,6 +25,7 @@ namespace VertigoWheel.App
         private readonly Dictionary<RewardId, RewardSettings> _sourceRewards = new Dictionary<RewardId, RewardSettings>();
         private AnimationSettings _uiAnimation;
         private Sprite _acceptedBombIcon;
+        private IReadOnlyList<RewardAmount> _lostRewards = Array.Empty<RewardAmount>();
 
         private ActiveModal _modal;
         private SpinTicket _activeTicket;
@@ -148,6 +149,7 @@ namespace VertigoWheel.App
             _catalog.Clear();
             _sourceRewards.Clear();
             _acceptedBombIcon = null;
+            _lostRewards = Array.Empty<RewardAmount>();
             _activeTicket = null;
             HideDialogs();
         }
@@ -193,7 +195,14 @@ namespace VertigoWheel.App
         private void HandleSpinCompleted(SpinTicket ticket)
         {
             if (_disposed || _modal != ActiveModal.None || ticket == null
-                || !ReferenceEquals(_activeTicket, ticket) || !_run.TryResolveSpin(ticket))
+                || !ReferenceEquals(_activeTicket, ticket))
+            {
+                return;
+            }
+            // Keep display-only history before Core clears the ledger on a bomb.
+            IReadOnlyList<RewardAmount> lostRewards = ticket.Outcome.OutcomeKind == SlotOutcomeKind.Bomb
+                ? _run.CreateSnapshot().Rewards : Array.Empty<RewardAmount>();
+            if (!_run.TryResolveSpin(ticket))
             {
                 return;
             }
@@ -201,10 +210,11 @@ namespace VertigoWheel.App
             {
                 if (ticket.Outcome.OutcomeKind == SlotOutcomeKind.Bomb)
                 {
+                    _lostRewards = lostRewards;
                     _run.TryCompleteResolution(ticket);
                     _modal = ActiveModal.Bomb;
                     Render();
-                    _bombResult.Show(_acceptedBombIcon, _uiAnimation);
+                    _bombResult.Show(_acceptedBombIcon, _lostRewards, _catalog, _uiAnimation);
                     return;
                 }
 
@@ -317,6 +327,7 @@ namespace VertigoWheel.App
                 _activeTicket = null;
                 BindPreparedWheel();
                 HideDialogs();
+                _lostRewards = Array.Empty<RewardAmount>();
                 _modal = ActiveModal.None;
                 _view.SetStatus(string.Empty);
                 Render(true);
@@ -386,7 +397,7 @@ namespace VertigoWheel.App
         {
             if (_modal == ActiveModal.Bomb)
             {
-                _bombResult.Show(_acceptedBombIcon, _uiAnimation);
+                _bombResult.Show(_acceptedBombIcon, _lostRewards, _catalog, _uiAnimation);
             }
             else if (_modal == ActiveModal.Summary)
             {

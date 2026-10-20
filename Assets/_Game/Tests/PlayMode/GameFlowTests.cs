@@ -18,6 +18,7 @@ using VertigoWheel.Settings;
 using VertigoWheel.UI.Board;
 using VertigoWheel.UI.Common;
 using VertigoWheel.UI.Dialogs;
+using VertigoWheel.UI.Rewards;
 using Object = UnityEngine.Object;
 
 namespace VertigoWheel.Tests.PlayMode
@@ -210,6 +211,7 @@ namespace VertigoWheel.Tests.PlayMode
         {
             SettleRewardAndContinue();
             Assert.That(_run.CreateSnapshot().Rewards, Is.Not.Empty);
+            RewardAmount earned = _run.CreateSnapshot().Rewards[0];
             _landingRandom.Sample = SampleFor(_run.Wheel, SlotOutcomeKind.Bomb);
             ClickSpin();
             _controller.Resume();
@@ -217,6 +219,13 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_run.State, Is.EqualTo(RunState.Failed));
             Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
             Assert.That(_bomb.IsReady, Is.True);
+            RewardCollectionView lost = _bomb.GetComponentInChildren<RewardCollectionView>();
+            Assert.That(lost.GetComponent<UnityEngine.UI.ScrollRect>().enabled, Is.True);
+            RewardItemView row = lost.GetComponentInChildren<RewardItemView>();
+            Assert.That(row.GetComponentInChildren<TMP_Text>().text,
+                Is.EqualTo(earned.Quantity.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)));
+            Assert.That(_bomb.GetComponentsInChildren<ActionButtonView>().Any(b => b.name == "ui_button_exit"), Is.False);
+            Assert.That(GetAction(_view).IsInteractable, Is.False);
             long generation = _run.RunGeneration;
             ClickAction(_bomb);
             ClickAction(_bomb);
@@ -224,6 +233,28 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_run.ZoneNumber, Is.EqualTo(1));
             Assert.That(_run.RunGeneration, Is.EqualTo(generation + 1));
             Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+        }
+
+        [Test]
+        public void FailedBombRestart_RetainsLostRewardDisplayUntilRestartSucceeds()
+        {
+            SettleRewardAndContinue();
+            _landingRandom.Sample = SampleFor(_run.Wheel, SlotOutcomeKind.Bomb);
+            ClickSpin();
+            _controller.Resume();
+            var list = _bomb.GetComponentInChildren<RewardCollectionView>();
+            string quantity = list.GetComponentInChildren<TMP_Text>().text;
+            RewardPoolSettings pool = _settings.BronzeWheel.Pool;
+            _settings.BronzeWheel.Pool = null;
+            ClickAction(_bomb);
+            Assert.That(_run.State, Is.EqualTo(RunState.Failed));
+            Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+            Assert.That(_bomb.IsReady, Is.True);
+            Assert.That(list.GetComponentInChildren<TMP_Text>().text, Is.EqualTo(quantity));
+            _settings.BronzeWheel.Pool = pool;
+            ClickAction(_bomb);
+            Assert.That(_run.State, Is.EqualTo(RunState.Ready));
+            Assert.That(_bomb.gameObject.activeSelf, Is.False);
         }
 
         [Test]
@@ -364,7 +395,7 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.BombIcon = null;
             _controller.Resume();
             Assert.That(_reward.IsReady, Is.True);
-            Assert.That(ReadField<UnityEngine.UI.Image>(_reward, "_icon").sprite, Is.SameAs(rewardIcon));
+            Assert.That(ReadField<UnityEngine.UI.Image>(_reward, "_icon").sprite, Is.EqualTo(rewardIcon));
             AssertRewardSettledOnce(ticket);
 
             reward.Icon = rewardIcon;
@@ -376,7 +407,7 @@ namespace VertigoWheel.Tests.PlayMode
             _controller.Resume();
             Assert.That(_run.State, Is.EqualTo(RunState.Failed));
             Assert.That(_bomb.IsReady, Is.True);
-            Assert.That(ReadField<UnityEngine.UI.Image>(_bomb, "_icon").sprite, Is.SameAs(bombIcon));
+            Assert.That(ReadField<UnityEngine.UI.Image>(_bomb, "_icon").sprite, Is.EqualTo(bombIcon));
         }
 
         private SpinTicket StartRewardSpin()

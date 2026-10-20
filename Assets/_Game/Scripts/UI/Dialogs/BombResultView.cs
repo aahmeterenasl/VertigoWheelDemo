@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using VertigoWheel.Core.Rewards;
 using VertigoWheel.Settings;
 using VertigoWheel.UI.Common;
+using VertigoWheel.UI.Rewards;
 
 namespace VertigoWheel.UI.Dialogs
 {
@@ -14,6 +17,9 @@ namespace VertigoWheel.UI.Dialogs
         private UnityEngine.UI.Image _icon;
 
         [SerializeField]
+        private RewardCollectionView _rewards;
+
+        [SerializeField]
         private ActionButtonView _restartButton;
 
         private bool _actionPending = true;
@@ -21,23 +27,31 @@ namespace VertigoWheel.UI.Dialogs
         public event Action RestartRequested;
         public bool IsReady => _dialog != null && _dialog.IsReady && !_actionPending;
 
-        public void Show(Sprite bombIcon, AnimationSettings settings)
+        public void Show(Sprite bombIcon, IReadOnlyList<RewardAmount> lostRewards,
+            IReadOnlyDictionary<RewardId, RewardSettings> catalog, AnimationSettings settings)
         {
-            if (bombIcon == null || settings == null)
+            if (bombIcon == null || lostRewards == null || catalog == null || settings == null)
             {
-                throw new ArgumentNullException("A bomb icon and animation settings are required.");
+                throw new ArgumentNullException("A bomb icon, lost rewards, catalog, and animation settings are required.");
             }
             settings.Validate();
             _icon.sprite = bombIcon;
             _icon.preserveAspect = true;
+            _rewards.SetRewards(lostRewards, catalog, !_dialog.IsOpen);
+            _rewards.SetInteractionEnabled(false);
             _actionPending = true;
             _restartButton.SetInteractable(true);
-            _dialog.Show(settings.DialogDurationSeconds, () => _actionPending = false);
+            _dialog.Show(settings.DialogDurationSeconds, () =>
+            {
+                _actionPending = false;
+                _rewards.SetInteractionEnabled(true);
+            });
         }
 
         public void Hide()
         {
             _actionPending = true;
+            _rewards.SetInteractionEnabled(false);
             _dialog.Hide();
         }
 
@@ -51,6 +65,10 @@ namespace VertigoWheel.UI.Dialogs
 
         private void OnDisable()
         {
+            if (_rewards != null)
+            {
+                _rewards.SetInteractionEnabled(false);
+            }
             if (_restartButton != null)
             {
                 _restartButton.Clicked -= Restart;
