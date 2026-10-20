@@ -238,8 +238,8 @@ namespace VertigoWheel.Tests.EditMode
             board.Render(session.CreateSnapshot(), settings.CreateZoneRules(), _catalog, false);
             Assert.That(zone.text, Is.EqualTo("ZONE 29"));
             Assert.That(zoneType.text, Is.EqualTo("NORMAL ZONE"));
-            Assert.That(safe.text, Is.EqualTo("SAFE ZONE 35"), "Zone 30 is super rather than safe.");
-            Assert.That(super.text, Is.EqualTo("SUPER ZONE 30"));
+            Assert.That(safe.text, Is.EqualTo("35"), "Zone 30 is super rather than safe; the caption is authored separately.");
+            Assert.That(super.text, Is.EqualTo("30"));
             Assert.That(exit.GetComponent<UnityEngine.UI.Button>().interactable, Is.True);
             UnityEngine.UI.Button spin = wheel.transform.Find("ui_button_spin").GetComponent<UnityEngine.UI.Button>();
             Assert.That(spin.interactable, Is.True);

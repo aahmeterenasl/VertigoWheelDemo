@@ -77,8 +77,8 @@ namespace VertigoWheel.UI.Board
             _zoneLabel.text = "ZONE " + snapshot.ZoneNumber.ToString(CultureInfo.InvariantCulture);
             _zoneTypeLabel.text = snapshot.Wheel.ZoneType == ZoneType.Super ? "SUPER ZONE"
                 : snapshot.Wheel.ZoneType == ZoneType.Safe ? "SAFE ZONE" : "NORMAL ZONE";
-            _nextSafeLabel.text = "SAFE ZONE " + NextSafeZone(snapshot.ZoneNumber, rules);
-            _nextSuperLabel.text = "SUPER ZONE " + NextMilestone(snapshot.ZoneNumber, rules.SuperZoneInterval);
+            _nextSafeLabel.text = NextSafeZone(snapshot.ZoneNumber, rules);
+            _nextSuperLabel.text = NextMilestone(snapshot.ZoneNumber, rules.SuperZoneInterval);
             _wheel.SetSpinInteractable(snapshot.CanSpin && !modalOpen);
             _exitButton.SetInteractable(snapshot.CanCashOut && !modalOpen);
             SetBoardBlocked(modalOpen);
