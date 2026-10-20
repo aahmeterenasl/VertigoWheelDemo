@@ -8,7 +8,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using VertigoWheel.App;
+using VertigoWheel.Core.Randomness;
 using VertigoWheel.Core.Rewards;
+using VertigoWheel.Core.Runs;
+using VertigoWheel.Core.Wheels;
+using VertigoWheel.Core.Zones;
 using VertigoWheel.Settings;
 using VertigoWheel.UI.Board;
 using VertigoWheel.UI.Common;
@@ -159,6 +163,79 @@ namespace VertigoWheel.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CashOutSummary_ScrollsCardsKeepsRestartFixed_AndResetsForLaterRuns()
+        {
+            CashOutSummaryView summary = _scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<CashOutSummaryView>(true)).Single();
+            AnimationSettings animation = ScriptableObject.CreateInstance<AnimationSettings>();
+            animation.DialogDurationSeconds = 0.05f;
+            RewardId[] ids = _catalog.Keys.ToArray();
+            RunSummary collected = CreateSummary(ids, ids.Length);
+            try
+            {
+                _board.SetBoardBlocked(true);
+                summary.Show(collected, _catalog, animation);
+                RewardCollectionView list = summary.GetComponentInChildren<RewardCollectionView>();
+                UnityEngine.UI.ScrollRect scroll = list.GetComponent<UnityEngine.UI.ScrollRect>();
+                Transform restart = summary.GetComponentsInChildren<ActionButtonView>()
+                    .Single(button => button.name == "ui_button_restart").transform;
+                Assert.That(summary.IsReady, Is.False);
+                Assert.That(scroll.enabled, Is.False, "Cards must wait for the dialog entrance before accepting a drag.");
+                yield return new WaitForSecondsRealtime(0.15f);
+                Canvas.ForceUpdateCanvases();
+
+                Assert.That(summary.IsReady, Is.True);
+                Assert.That(scroll.enabled, Is.True);
+                Assert.That(scroll.horizontal, Is.True);
+                Assert.That(scroll.vertical, Is.False);
+                Assert.That(scroll.content.rect.width, Is.GreaterThan(scroll.viewport.rect.width));
+                Assert.That(restart.IsChildOf(scroll.content), Is.False, "Restart must remain outside the moving cards.");
+                Assert.That(_scroll.enabled, Is.False, "The gameplay ledger remains blocked beneath the summary.");
+                Vector3 restartPosition = restart.position;
+                int firstItemId = scroll.content.GetChild(0).GetInstanceID();
+                int pooledCount = scroll.content.childCount;
+                float before = scroll.horizontalNormalizedPosition;
+                scroll.OnScroll(new PointerEventData(EventSystem.current) { scrollDelta = new Vector2(-120, 0) });
+                yield return null;
+                Assert.That(scroll.horizontalNormalizedPosition, Is.GreaterThan(before + .001f));
+                Assert.That(Vector3.Distance(restart.position, restartPosition), Is.LessThan(.01f));
+
+                float movedPosition = scroll.horizontalNormalizedPosition;
+                summary.Show(collected, _catalog, animation);
+                yield return new WaitForSecondsRealtime(0.15f);
+                Assert.That(scroll.horizontalNormalizedPosition, Is.EqualTo(movedPosition).Within(.001f),
+                    "Refreshing an open terminal dialog must preserve the cards being inspected.");
+
+                scroll.velocity = new Vector2(600, 0);
+                summary.Hide();
+                Assert.That(scroll.enabled, Is.False);
+                Assert.That(scroll.velocity, Is.EqualTo(Vector2.zero));
+                animation.DialogDurationSeconds = 0;
+                summary.Show(CreateSummary(ids, 2), _catalog, animation);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.That(list.GetComponentsInChildren<RewardItemView>().Length, Is.EqualTo(2));
+                Assert.That(scroll.content.childCount, Is.EqualTo(pooledCount));
+                Assert.That(scroll.content.GetChild(0).GetInstanceID(), Is.EqualTo(firstItemId));
+                Assert.That(scroll.horizontalNormalizedPosition, Is.EqualTo(0f).Within(.001f));
+
+                summary.Hide();
+                summary.Show(CreateSummary(ids, 0), _catalog, animation);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                Assert.That(list.GetComponentsInChildren<RewardItemView>().Length, Is.Zero,
+                    "A later empty cash-out must not display cards from a previous run.");
+                Assert.That(scroll.content.childCount, Is.EqualTo(pooledCount));
+                Assert.That(scroll.horizontalNormalizedPosition, Is.EqualTo(0f).Within(.001f));
+            }
+            finally
+            {
+                summary.Hide();
+                Object.Destroy(animation);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator OpeningModal_CancelsCapturedDragAndMomentumUntilBoardUnblocks()
         {
             RewardAmount[] rewards = _catalog.Keys.Select(id => new RewardAmount(id, 10)).ToArray();
@@ -191,6 +268,46 @@ namespace VertigoWheel.Tests.PlayMode
             pointer.scrollDelta = new Vector2(0, -10);
             _scroll.OnScroll(pointer);
             Assert.That(Vector2.Distance(_scroll.content.anchoredPosition, blockedContentPosition), Is.GreaterThan(0.01f));
+        }
+
+        private static RunSummary CreateSummary(RewardId[] ids, int spinCount)
+        {
+            RunSession run = new RunSession(new SummarySettingsSource(ids), new ZeroRandomSource(), new ZeroRandomSource());
+            for (int index = 0; index < spinCount; index++)
+            {
+                Assert.That(run.TryStartSpin(out SpinTicket ticket), Is.True);
+                Assert.That(run.TryResolveSpin(ticket), Is.True);
+                Assert.That(run.TryCompleteResolution(ticket), Is.True);
+            }
+            Assert.That(run.TryCashOut(out RunSummary summary), Is.True);
+            return summary;
+        }
+
+        private sealed class ZeroRandomSource : IRandomSource
+        {
+            public double NextDouble() => 0;
+        }
+
+        private sealed class SummarySettingsSource : IRunSettingsSource
+        {
+            private readonly RewardId[] _ids;
+
+            public SummarySettingsSource(RewardId[] ids) => _ids = ids;
+
+            public ZoneRules CreateZoneRules() => new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, long.MaxValue);
+
+            public WheelData CreateWheelData(int zoneNumber, IRandomSource random)
+            {
+                ZoneType type = CreateZoneRules().GetZoneType(zoneNumber);
+                WheelSlotData[] slots = new WheelSlotData[WheelData.SlotCount];
+                for (int index = 0; index < slots.Length; index++)
+                {
+                    slots[index] = type == ZoneType.Normal && index == slots.Length - 1
+                        ? WheelSlotData.CreateBomb(1)
+                        : WheelSlotData.CreateReward(_ids[(zoneNumber - 1 + index) % _ids.Length], 10, 1);
+                }
+                return new WheelData(zoneNumber, type, slots);
+            }
         }
     }
 }

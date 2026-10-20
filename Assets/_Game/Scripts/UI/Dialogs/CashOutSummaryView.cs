@@ -37,16 +37,22 @@ namespace VertigoWheel.UI.Dialogs
                 throw new ArgumentNullException("A cash-out summary, reward catalog, and animation settings are required.");
             }
             settings.Validate();
-            _title.text = "REWARDS COLLECTED";
-            _rewards.SetRewards(summary.Rewards, catalog, true);
+            _title.text = "YOU GOT:";
+            _rewards.SetRewards(summary.Rewards, catalog, !_dialog.IsOpen);
+            _rewards.SetInteractionEnabled(false);
             _actionPending = true;
             _restartButton.SetInteractable(true);
-            _dialog.Show(settings.DialogDurationSeconds, () => _actionPending = false);
+            _dialog.Show(settings.DialogDurationSeconds, () =>
+            {
+                _actionPending = false;
+                _rewards.SetInteractionEnabled(true);
+            });
         }
 
         public void Hide()
         {
             _actionPending = true;
+            _rewards.SetInteractionEnabled(false);
             _dialog.Hide();
         }
 
@@ -60,6 +66,10 @@ namespace VertigoWheel.UI.Dialogs
 
         private void OnDisable()
         {
+            if (_rewards != null)
+            {
+                _rewards.SetInteractionEnabled(false);
+            }
             if (_restartButton != null)
             {
                 _restartButton.Clicked -= Restart;
