@@ -25,17 +25,16 @@ namespace VertigoWheel.UI.Wheel
             ApplyContentLayout();
         }
 
-        public void SetLayout(Vector2 position, float size)
+        public void SetLayout(Vector2 position, float size, float angleDegrees)
         {
             RectTransform root = (RectTransform)transform;
             root.anchoredPosition = position;
             root.sizeDelta = Vector2.one * size;
+            // Face outward from the wheel center, then inherit the wheel's rotation.
+            root.localRotation = Quaternion.Euler(0, 0, angleDegrees);
             _quantity.fontSize = size * 0.19f;
-        }
-
-        public void KeepUpright(float wheelRotationDegrees)
-        {
-            transform.localRotation = Quaternion.Euler(0, 0, -wheelRotationDegrees);
+            _quantity.fontSizeMax = size * 0.19f;
+            _quantity.fontSizeMin = size * 0.10f;
         }
 
         private void OnEnable()
@@ -54,8 +53,8 @@ namespace VertigoWheel.UI.Wheel
             RectTransform iconRect = _icon.rectTransform;
             Vector2 anchorMin = iconRect.anchorMin;
             Vector2 anchorMax = iconRect.anchorMax;
-            anchorMin.y = _isBomb ? 0.19f : 0.29f;
-            anchorMax.y = _isBomb ? 0.81f : 0.91f;
+            anchorMin.y = _isBomb ? 0.26f : 0.335f;
+            anchorMax.y = _isBomb ? 0.74f : 0.815f;
             iconRect.anchorMin = anchorMin;
             iconRect.anchorMax = anchorMax;
             _quantity.gameObject.SetActive(!_isBomb);

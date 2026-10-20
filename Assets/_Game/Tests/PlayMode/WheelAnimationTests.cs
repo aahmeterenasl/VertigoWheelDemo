@@ -284,10 +284,10 @@ namespace VertigoWheel.Tests.PlayMode
                     Assert.That(Vector2.Distance(slot.anchoredPosition, expectedPosition), Is.LessThan(0.01f));
                     Assert.That(Vector2.Distance(slot.sizeDelta, Vector2.one * 400f * sizeRatio),
                         Is.LessThan(0.01f));
-                    Assert.That(slot.GetComponentInChildren<TMP_Text>(true).fontSize,
+                    Assert.That(slot.GetComponentInChildren<TMP_Text>(true).fontSizeMax,
                         Is.EqualTo(400f * sizeRatio * 0.19f).Within(0.01f));
                     Assert.That(Quaternion.Angle(slot.localRotation,
-                        Quaternion.Euler(0, 0, -_view.RotationDegrees)), Is.LessThan(0.01f));
+                        Quaternion.Euler(0, 0, slotZeroAngle + index * 360f / WheelData.SlotCount)), Is.LessThan(0.01f));
                 }
                 RectTransform pointer = (RectTransform)_view.transform.Find("ui_image_wheel_pointer_value");
                 Vector2 pointerPosition = new Vector2(-Mathf.Sin(pointerAngle * Mathf.Deg2Rad),

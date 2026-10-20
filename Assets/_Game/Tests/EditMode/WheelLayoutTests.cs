@@ -100,6 +100,43 @@ namespace VertigoWheel.Tests.EditMode
             }
         }
 
+        [TestCase(0f, true)]
+        [TestCase(13f, false)]
+        public void Slots_FaceOutwardAndInheritWheelRotationAfterResizing(float slotZeroAngle, bool clockwise)
+        {
+            GameSettings game = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/_Game/Settings/GameSettings.asset");
+            WheelSettings profile = Object.Instantiate(_settings);
+            try
+            {
+                profile.SlotZeroAngleDegrees = slotZeroAngle;
+                profile.ClockwiseSlotOrder = clockwise;
+                var run = new RunSession(game, new SystemRandomSource(14), new SystemRandomSource(37));
+                _view.Bind(run.Wheel, profile, game.CreateRewardCatalog(), game.BombIcon);
+                Transform rotationRoot = _view.transform.Find("ui_wheel_rotation");
+                Transform button = _view.transform.Find("ui_button_spin");
+                Quaternion buttonRotation = button.rotation;
+                foreach (float rotation in new[] { 0f, 37f, -719f, 2430f })
+                {
+                    _view.SetRotation(rotation);
+                    ((RectTransform)_view.transform).sizeDelta = new Vector2(500f, 500f);
+                    Canvas.ForceUpdateCanvases();
+                    for (int index = 0; index < WheelData.SlotCount; index++)
+                    {
+                        Transform slot = rotationRoot.Find("ui_slot_reward_" + index.ToString("00"));
+                        float angle = slotZeroAngle + (clockwise ? -1 : 1) * index * 45f;
+                        Quaternion expected = Quaternion.Euler(0, 0, angle);
+                        Assert.That(Quaternion.Angle(slot.localRotation, expected), Is.LessThan(.01f));
+                        Assert.That(Quaternion.Angle(slot.rotation, rotationRoot.rotation * expected), Is.LessThan(.01f));
+                        Vector3 outward = (slot.position - rotationRoot.position).normalized;
+                        Assert.That(Vector3.Dot(slot.up, outward), Is.GreaterThan(.999f));
+                    }
+                    Assert.That(Quaternion.Angle(button.rotation, buttonRotation), Is.LessThan(.01f),
+                        "The center Spin button remains stationary.");
+                }
+            }
+            finally { Object.DestroyImmediate(profile); }
+        }
+
         private void CreateUnboundView()
         {
             GameObject instance = Object.Instantiate(_prefab, _canvasRoot.transform, false);
@@ -136,7 +173,7 @@ namespace VertigoWheel.Tests.EditMode
                     "Slot " + index + " size");
                 TMP_Text quantity = slot.GetComponentInChildren<TMP_Text>(true);
                 Assert.That(quantity, Is.Not.Null);
-                Assert.That(quantity.fontSize,
+                Assert.That(quantity.fontSizeMax,
                     Is.EqualTo(diameter * _settings.SlotSizeRatio * 0.19f).Within(0.01f));
             }
 

@@ -121,10 +121,6 @@ namespace VertigoWheel.UI.Wheel
             }
             _rotationDegrees = degrees;
             _rotationRoot.localRotation = Quaternion.Euler(0, 0, degrees % 360f);
-            foreach (WheelSlotView slot in _slots)
-            {
-                slot.KeepUpright(degrees % 360f);
-            }
         }
 
         private void OnEnable()
@@ -202,7 +198,8 @@ namespace VertigoWheel.UI.Wheel
             for (int index = 0; index < _slots.Length; index++)
             {
                 double angle = WheelAngleCalculator.GetSlotAngleDegrees(index, _slotZeroAngle, _clockwiseSlotOrder);
-                _slots[index].SetLayout(PositionAt(angle, size * _slotRadiusRatio), size * _slotSizeRatio);
+                _slots[index].SetLayout(PositionAt(angle, size * _slotRadiusRatio),
+                    size * _slotSizeRatio, (float)angle);
             }
             _pointer.rectTransform.anchoredPosition = PositionAt(_pointerAngle, size * 0.43f);
             _pointer.rectTransform.sizeDelta = new Vector2(size * 0.085f, size * 0.13f);

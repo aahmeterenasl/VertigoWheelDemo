@@ -74,11 +74,11 @@ namespace VertigoWheel.Tests.EditMode
         {
             _view.Bind(null, 0, true);
 
-            _view.SetLayout(new Vector2(90f, -40f), size);
+            _view.SetLayout(new Vector2(90f, -40f), size, 45f);
             ((RectTransform)_view.transform).ForceUpdateRectTransforms();
 
             AssertBombLayout(_view);
-            Assert.That(_icon.rect.height, Is.EqualTo(size * 0.62f).Within(0.01f));
+            Assert.That(_icon.rect.height, Is.EqualTo(size * 0.48f).Within(0.01f));
         }
 
         [Test]
@@ -112,11 +112,53 @@ namespace VertigoWheel.Tests.EditMode
             }
         }
 
+        [TestCase(64f, 1L)]
+        [TestCase(129f, 100000L)]
+        [TestCase(256f, long.MaxValue)]
+        public void RewardContent_FitsInsideCircularOpeningIncludingLargeQuantities(float size, long amount)
+        {
+            var canvas = new GameObject("SlotFitTestCanvas", typeof(RectTransform), typeof(Canvas));
+            canvas.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            try
+            {
+                _view.transform.SetParent(canvas.transform, false);
+                _view.Bind(null, amount, false);
+                _view.SetLayout(Vector2.zero, size, 45f);
+                Canvas.ForceUpdateCanvases();
+                _quantity.ForceMeshUpdate();
+
+                Assert.That(_quantity.enableAutoSizing, Is.True);
+                Assert.That(_quantity.isTextOverflowing, Is.False);
+                foreach (RectTransform content in new[] { _icon, _quantity.rectTransform })
+                {
+                    // Test visible text, rather than the unused corners of its rectangular box.
+                    Bounds bounds = content == _quantity.rectTransform
+                        ? _quantity.textBounds : new Bounds(content.rect.center, content.rect.size);
+                    foreach (Vector3 corner in new[]
+                    {
+                        new Vector3(bounds.min.x, bounds.min.y), new Vector3(bounds.min.x, bounds.max.y),
+                        new Vector3(bounds.max.x, bounds.min.y), new Vector3(bounds.max.x, bounds.max.y)
+                    })
+                    {
+                        Vector3 local = _view.transform.InverseTransformPoint(content.TransformPoint(corner));
+                        Assert.That(local.magnitude, Is.LessThanOrEqualTo(size * .45f + .01f), content.name);
+                    }
+                    Assert.That(_view.transform.InverseTransformPoint(content.TransformPoint(content.rect.center)).x,
+                        Is.EqualTo(0).Within(.01f), "Content must be horizontally centered.");
+                }
+            }
+            finally
+            {
+                _view.transform.SetParent(null, false);
+                Object.DestroyImmediate(canvas);
+            }
+        }
+
         private static void ResetToRewardLayout(WheelSlotView view)
         {
             RectTransform icon = view.GetComponentInChildren<Image>(true).rectTransform;
-            icon.anchorMin = new Vector2(icon.anchorMin.x, 0.29f);
-            icon.anchorMax = new Vector2(icon.anchorMax.x, 0.91f);
+            icon.anchorMin = new Vector2(icon.anchorMin.x, 0.335f);
+            icon.anchorMax = new Vector2(icon.anchorMax.x, 0.815f);
             view.GetComponentInChildren<TMP_Text>(true).gameObject.SetActive(true);
         }
 
