@@ -15,6 +15,9 @@ MonoBehaviour:
   _baseSprite: {fileID: 21300000, guid: 8e99e11bd523bcf43a62581692d9174a, type: 3}
   _pointerSprite: {fileID: 21300000, guid: 9d14ae13a531fab4c9b738eef8374f45, type: 3}
   _spinButtonColor: {r: 0.55, g: 0.58, b: 0.62, a: 1}
+  _headingText: SILVER SPIN
+  _statusText: "Safe spin \u2022 no bombs"
+  _headingColor: {r: 0.84, g: 0.9, b: 0.94, a: 1}
   _slotZeroAngleDegrees: 0
   _clockwiseSlotOrder: 1
   _pointerAngleDegrees: 0

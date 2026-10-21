@@ -15,6 +15,9 @@ MonoBehaviour:
   _baseSprite: {fileID: 21300000, guid: b5af15a9a5a161e4fba46d7a34d70ec9, type: 3}
   _pointerSprite: {fileID: 21300000, guid: b218e39582074314ba74b9887eb6da70, type: 3}
   _spinButtonColor: {r: 0.76, g: 0.43, b: 0.2, a: 1}
+  _headingText: BRONZE SPIN
+  _statusText: Spin to win rewards
+  _headingColor: {r: 1, g: 0.72, b: 0.34, a: 1}
   _slotZeroAngleDegrees: 0
   _clockwiseSlotOrder: 1
   _pointerAngleDegrees: 0

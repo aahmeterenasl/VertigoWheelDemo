@@ -210,7 +210,7 @@ namespace VertigoWheel.Tests.EditMode
                 : owner is CashOutSummaryView ? new[] { "_title" }
                 : owner is ZoneTrackView ? new[] { "_background", "_currentBackground" }
                 : owner is ZoneItemView ? new[] { "_number" }
-                : owner is GameView ? new[] { "_zoneLabel", "_zoneTypeLabel", "_nextSafeLabel", "_nextSuperLabel", "_statusLabel" }
+                : owner is GameView ? new[] { "_zoneLabel", "_nextSafeLabel", "_nextSuperLabel", "_statusLabel" }
                 : owner is WheelView ? new[] { "_baseImage", "_pointer" }
                 : Array.Empty<string>();
             foreach (string name in fields)

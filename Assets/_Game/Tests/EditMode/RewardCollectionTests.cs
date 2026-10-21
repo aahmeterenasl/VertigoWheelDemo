@@ -27,6 +27,7 @@ namespace VertigoWheel.Tests.EditMode
         private UnityEngine.UI.ScrollRect _scroll;
         private RectTransform _content;
         private TMP_Text _emptyLabel;
+        private WheelSettings _wheelProfile;
         private readonly Dictionary<RewardId, RewardSettings> _catalog = new Dictionary<RewardId, RewardSettings>();
 
         [SetUp]
@@ -90,6 +91,7 @@ namespace VertigoWheel.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
+            Object.DestroyImmediate(_wheelProfile);
             Object.DestroyImmediate(_canvasRoot);
             Object.DestroyImmediate(_templateRoot);
             foreach (RewardSettings reward in _catalog.Values)
@@ -202,8 +204,11 @@ namespace VertigoWheel.Tests.EditMode
             }
         }
 
-        [Test]
-        public void BoardRender_UsesPreparedZoneAndBlocksControlsAndMomentumBehindModal()
+        [TestCase(29, "35", "30")]
+        [TestCase(5, "10", "30")]
+        [TestCase(30, "35", "60")]
+        public void BoardRender_UsesPreparedZoneAndBlocksControlsAndMomentumBehindModal(
+            int zoneNumber, string nextSafe, string nextSuper)
         {
             GameSettings settings = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/_Game/Settings/GameSettings.asset");
             GameObject wheelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel.prefab");
@@ -215,7 +220,6 @@ namespace VertigoWheel.Tests.EditMode
             GameView board = boardObject.AddComponent<GameView>();
             ActionButtonView exit = Child("ui_button_exit", boardObject.transform).AddComponent<ActionButtonView>();
             TMP_Text zone = AddText("ui_text_zone", boardObject.transform);
-            TMP_Text zoneType = AddText("ui_text_zone_type", boardObject.transform);
             TMP_Text safe = AddText("ui_text_safe", boardObject.transform);
             TMP_Text super = AddText("ui_text_super", boardObject.transform);
             SetField(board, "_wheel", wheel);
@@ -223,23 +227,40 @@ namespace VertigoWheel.Tests.EditMode
             SetField(board, "_exitButton", exit);
             SetField(board, "_rewards", _view);
             SetField(board, "_zoneLabel", zone);
-            SetField(board, "_zoneTypeLabel", zoneType);
             SetField(board, "_nextSafeLabel", safe);
             SetField(board, "_nextSuperLabel", super);
-            SetField(board, "_statusLabel", AddText("ui_text_status", boardObject.transform));
+            TMP_Text status = AddText("ui_text_status", boardObject.transform);
+            SetField(board, "_statusLabel", status);
             SetField(board, "_boardGroup", boardGroup);
             GameObject trackPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Game/Prefabs/UI/Board/ui_panel_zone_track.prefab");
             Assert.That(trackPrefab, Is.Not.Null);
             SetField(board, "_zoneTrack", Object.Instantiate(trackPrefab, boardObject.transform, false).GetComponent<ZoneTrackView>());
-            RunSession session = new RunSession(settings, new SystemRandomSource(12), new SystemRandomSource(34), 29);
-            wheel.Bind(session.Wheel, settings.GetWheelSettingsForZone(29), _catalog, settings.BombIcon);
+            RunSession session = new RunSession(settings, new SystemRandomSource(12), new SystemRandomSource(34), zoneNumber);
+            _wheelProfile = Object.Instantiate(settings.GetWheelSettingsForZone(zoneNumber));
+            _wheelProfile.HeadingText = "CUSTOM HEADING";
+            _wheelProfile.StatusText = "Custom wheel caption";
+            wheel.Bind(session.Wheel, _wheelProfile, _catalog, settings.BombIcon);
 
             board.Render(session.CreateSnapshot(), settings.CreateZoneRules(), _catalog, false);
-            Assert.That(zone.text, Is.EqualTo("ZONE 29"));
-            Assert.That(zoneType.text, Is.EqualTo("NORMAL ZONE"));
-            Assert.That(safe.text, Is.EqualTo("35"), "Zone 30 is super rather than safe; the caption is authored separately.");
-            Assert.That(super.text, Is.EqualTo("30"));
+            Assert.That(zone.text, Is.EqualTo("CUSTOM HEADING"));
+            Assert.That(zone.color, Is.EqualTo(settings.GetWheelSettingsForZone(zoneNumber).HeadingColor));
+            Assert.That(status.text, Is.EqualTo("Custom wheel caption"));
+            board.SetStatus("Temporary gameplay message");
+            _wheelProfile.HeadingText = "LIVE HEADING";
+            _wheelProfile.HeadingColor = Color.cyan;
+            _wheelProfile.StatusText = "Live wheel caption";
+            typeof(GameView).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(board, null);
+            Assert.That(zone.text, Is.EqualTo("LIVE HEADING"));
+            Assert.That(zone.color, Is.EqualTo(Color.cyan));
+            Assert.That(status.text, Is.EqualTo("Temporary gameplay message"));
+            board.SetStatus(string.Empty);
+            Assert.That(status.text, Is.EqualTo("Live wheel caption"));
+            _wheelProfile.StatusText = string.Empty;
+            typeof(GameView).GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(board, null);
+            Assert.That(status.gameObject.activeSelf, Is.False);
+            Assert.That(safe.text, Is.EqualTo(nextSafe), "Super zones replace safe zones.");
+            Assert.That(super.text, Is.EqualTo(nextSuper));
             Assert.That(exit.GetComponent<UnityEngine.UI.Button>().interactable, Is.True);
             UnityEngine.UI.Button spin = wheel.transform.Find("ui_button_spin").GetComponent<UnityEngine.UI.Button>();
             Assert.That(spin.interactable, Is.True);

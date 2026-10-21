@@ -32,9 +32,6 @@ namespace VertigoWheel.UI.Board
         private TMP_Text _zoneLabel;
 
         [SerializeField]
-        private TMP_Text _zoneTypeLabel;
-
-        [SerializeField]
         private TMP_Text _nextSafeLabel;
 
         [SerializeField]
@@ -50,6 +47,7 @@ namespace VertigoWheel.UI.Board
         private ZoneTrackView _zoneTrack;
 
         private ActionButtonView _listenedExitButton;
+        private string _statusMessage = string.Empty;
 
         public WheelView Wheel => _wheel;
         public WheelAnimator WheelAnimator => _wheelAnimator;
@@ -74,9 +72,7 @@ namespace VertigoWheel.UI.Board
             ValidateReferences();
             _zoneTrack.Render(snapshot.ZoneNumber, rules);
             _rewards.SetRewards(snapshot.Rewards, catalog, resetScroll);
-            _zoneLabel.text = "ZONE " + snapshot.ZoneNumber.ToString(CultureInfo.InvariantCulture);
-            _zoneTypeLabel.text = snapshot.Wheel.ZoneType == ZoneType.Super ? "SUPER ZONE"
-                : snapshot.Wheel.ZoneType == ZoneType.Safe ? "SAFE ZONE" : "NORMAL ZONE";
+            RefreshWheelText();
             _nextSafeLabel.text = NextSafeZone(snapshot.ZoneNumber, rules);
             _nextSuperLabel.text = NextMilestone(snapshot.ZoneNumber, rules.SuperZoneInterval);
             _wheel.SetSpinInteractable(snapshot.CanSpin && !modalOpen);
@@ -90,8 +86,49 @@ namespace VertigoWheel.UI.Board
             {
                 throw new InvalidOperationException("The board is missing its status label reference.");
             }
-            _statusLabel.text = message ?? string.Empty;
-            _statusLabel.gameObject.SetActive(!string.IsNullOrEmpty(message));
+            _statusMessage = message ?? string.Empty;
+            RefreshStatus();
+        }
+
+        // Cosmetic asset edits are safe to preview immediately, including during an accepted spin.
+        private void LateUpdate() => RefreshWheelText();
+
+        private void RefreshWheelText()
+        {
+            if (_wheel == null)
+            {
+                return;
+            }
+            if (_zoneLabel != null)
+            {
+                if (_zoneLabel.text != _wheel.HeadingText)
+                {
+                    _zoneLabel.text = _wheel.HeadingText;
+                }
+                if (_zoneLabel.color != _wheel.HeadingColor)
+                {
+                    _zoneLabel.color = _wheel.HeadingColor;
+                }
+            }
+            RefreshStatus();
+        }
+
+        private void RefreshStatus()
+        {
+            if (_statusLabel == null)
+            {
+                return;
+            }
+            string text = string.IsNullOrEmpty(_statusMessage) ? _wheel?.StatusText ?? string.Empty : _statusMessage;
+            if (_statusLabel.text != text)
+            {
+                _statusLabel.text = text;
+            }
+            bool visible = !string.IsNullOrEmpty(text);
+            if (_statusLabel.gameObject.activeSelf != visible)
+            {
+                _statusLabel.gameObject.SetActive(visible);
+            }
         }
 
         public void SetBoardBlocked(bool blocked)
@@ -150,7 +187,7 @@ namespace VertigoWheel.UI.Board
         {
             CacheButtons();
             if (_wheel == null || _wheelAnimator == null || _exitButton == null || _rewards == null
-                || _zoneLabel == null || _zoneTypeLabel == null || _nextSafeLabel == null
+                || _zoneLabel == null || _nextSafeLabel == null
                 || _nextSuperLabel == null || _statusLabel == null || _boardGroup == null || _zoneTrack == null)
             {
                 throw new InvalidOperationException("The board is missing required wheel, controls, ledger, or label references.");

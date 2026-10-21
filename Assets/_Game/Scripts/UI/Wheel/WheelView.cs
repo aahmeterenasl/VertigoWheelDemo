@@ -44,6 +44,9 @@ namespace VertigoWheel.UI.Wheel
         public double SlotZeroAngleDegrees => _slotZeroAngle;
         public bool ClockwiseSlotOrder => _clockwiseSlotOrder;
         public float PointerAngleDegrees => _pointerAngle;
+        public Color HeadingColor => _wheelSettings != null ? _wheelSettings.HeadingColor : Color.white;
+        public string HeadingText => _wheelSettings != null ? _wheelSettings.HeadingText : string.Empty;
+        public string StatusText => _wheelSettings != null ? _wheelSettings.StatusText : string.Empty;
 
         public void Bind(
             WheelData wheel,

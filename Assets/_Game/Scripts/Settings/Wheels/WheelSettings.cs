@@ -18,6 +18,18 @@ namespace VertigoWheel.Settings
         [SerializeField]
         private Color _spinButtonColor = Color.white;
 
+        [Header("Board text")]
+        [SerializeField]
+        private string _headingText = "SPIN";
+
+        [SerializeField, TextArea(1, 3)]
+        [Tooltip("Default text below the wheel. Leave empty to hide it; gameplay messages temporarily override it.")]
+        private string _statusText = string.Empty;
+
+        [SerializeField]
+        [Tooltip("Readable heading accent for this wheel profile.")]
+        private Color _headingColor = Color.white;
+
         [SerializeField]
         [Tooltip("Angle of slot zero from up; positive angles are counterclockwise.")]
         private float _slotZeroAngleDegrees;
@@ -100,9 +112,31 @@ namespace VertigoWheel.Settings
             get => _spinButtonColor;
             set
             {
-                ValidateSpinButtonColor(value);
+                ValidateColor(value);
                 _spinButtonColor = value;
             }
+        }
+
+        public Color HeadingColor
+        {
+            get => _headingColor;
+            set
+            {
+                ValidateColor(value);
+                _headingColor = value;
+            }
+        }
+
+        public string HeadingText
+        {
+            get => _headingText;
+            set => _headingText = value ?? string.Empty;
+        }
+
+        public string StatusText
+        {
+            get => _statusText;
+            set => _statusText = value ?? string.Empty;
         }
 
         public float SlotZeroAngleDegrees
@@ -179,7 +213,8 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
-            ValidateSpinButtonColor(_spinButtonColor);
+            ValidateColor(_spinButtonColor);
+            ValidateColor(_headingColor);
             ValidateSlotRatio(_slotRadiusRatio);
             ValidateSlotRatio(_slotSizeRatio);
             int bombCount = 0;
@@ -234,7 +269,8 @@ namespace VertigoWheel.Settings
 
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
-            ValidateSpinButtonColor(_spinButtonColor);
+            ValidateColor(_spinButtonColor);
+            ValidateColor(_headingColor);
             ValidateSlotRatio(_slotRadiusRatio);
             ValidateSlotRatio(_slotSizeRatio);
             _pool.Validate();
@@ -275,14 +311,14 @@ namespace VertigoWheel.Settings
             }
         }
 
-        private static void ValidateSpinButtonColor(Color value)
+        private static void ValidateColor(Color value)
         {
             for (int channel = 0; channel < 4; channel++)
             {
                 float component = value[channel];
                 if (float.IsNaN(component) || float.IsInfinity(component) || component < 0f || component > 1f)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), "Spin button color channels must be finite and between zero and one.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Wheel color channels must be finite and between zero and one.");
                 }
             }
         }
