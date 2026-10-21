@@ -17,7 +17,7 @@ namespace VertigoWheel.Settings
         private CashOutPolicy _cashOutPolicy = CashOutPolicy.AnyZone;
 
         [SerializeField, Min(1)]
-        [Tooltip("Number of zones per reward tier. Zone 1 starts at tier 0.")]
+        [Tooltip("Zones per pool eligibility tier. Zone 1 starts at tier 0. Quantities grow every zone independently.")]
         private int _rewardTierInterval = 5;
 
         [SerializeField, Min(1)]

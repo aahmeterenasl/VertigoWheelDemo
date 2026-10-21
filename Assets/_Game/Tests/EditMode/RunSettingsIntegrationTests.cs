@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -83,6 +84,56 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<InvalidOperationException>(() => session.Restart());
             Assert.That(session.State, Is.EqualTo(RunState.CashedOut));
             Assert.That(session.Summary, Is.SameAs(summary));
+        }
+
+        [Test]
+        public void MultiplierEdit_KeepsTheAcceptedOutcomeAndBankedTotal_AndAffectsTheNextWheel()
+        {
+            GameSettings settings = CreateSettings();
+            settings.BronzeWheel = Clone(settings.BronzeWheel);
+            var landing = new MutableRandomSource();
+            var run = new RunSession(settings, new SystemRandomSource(123), landing);
+            WheelData prepared = run.Wheel;
+            landing.Sample = SampleForReward(prepared);
+            Assert.That(run.TryStartSpin(out SpinTicket ticket), Is.True);
+            long accepted = ticket.Outcome.Quantity;
+            settings.BronzeWheel.QuantityMultiplier = 10;
+            Assert.That(run.Wheel, Is.SameAs(prepared));
+            Assert.That(ticket.Outcome.Quantity, Is.EqualTo(accepted));
+            Assert.That(run.TryResolveSpin(ticket), Is.True);
+            Assert.That(run.TryCompleteResolution(ticket), Is.True);
+            var nextEntries = settings.BronzeWheel.Pool.CreateEntries(2, settings.CreateZoneRules(), 10);
+            Assert.That(run.Wheel.Slots.Where(s => s.OutcomeKind == SlotOutcomeKind.Reward)
+                .All(s => nextEntries.Any(e => e.Reward.RewardId == s.RewardId && e.Reward.Quantity == s.Quantity)), Is.True);
+            Assert.That(run.TryCashOut(out RunSummary collected), Is.True);
+            Assert.That(collected.Rewards.Count, Is.EqualTo(1));
+            Assert.That(collected.Rewards[0].Quantity, Is.EqualTo(accepted));
+        }
+
+        [Test]
+        public void InvalidMultiplierEdit_KeepsAcknowledgmentRetryableWithoutGrantingAgain()
+        {
+            GameSettings settings = CreateSettings();
+            settings.BronzeWheel = Clone(settings.BronzeWheel);
+            var landing = new MutableRandomSource();
+            var run = new RunSession(settings, new SystemRandomSource(123), landing);
+            landing.Sample = SampleForReward(run.Wheel);
+            Assert.That(run.TryStartSpin(out SpinTicket ticket), Is.True);
+            Assert.That(run.TryResolveSpin(ticket), Is.True);
+            using (var data = new SerializedObject(settings.BronzeWheel))
+            {
+                data.FindProperty("_quantityMultiplier").intValue = 0;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => run.TryCompleteResolution(ticket));
+            Assert.That(run.State, Is.EqualTo(RunState.Resolving));
+            Assert.That(run.PendingSpin, Is.SameAs(ticket));
+            Assert.That(run.CreateSnapshot().Rewards[0].Quantity, Is.EqualTo(ticket.Outcome.Quantity));
+            settings.BronzeWheel.QuantityMultiplier = 2;
+            Assert.That(run.TryCompleteResolution(ticket), Is.True);
+            Assert.That(run.TryCompleteResolution(ticket), Is.False);
+            Assert.That(run.TryResolveSpin(ticket), Is.False);
+            Assert.That(run.CreateSnapshot().Rewards[0].Quantity, Is.EqualTo(ticket.Outcome.Quantity));
         }
 
         private GameSettings CreateSettings()

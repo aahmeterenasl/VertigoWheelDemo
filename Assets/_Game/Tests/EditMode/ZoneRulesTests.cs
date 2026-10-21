@@ -54,17 +54,67 @@ namespace VertigoWheel.Tests.EditMode
         }
 
         [TestCase(1, 0, 100)]
-        [TestCase(5, 0, 100)]
-        [TestCase(6, 1, 125)]
-        [TestCase(10, 1, 125)]
-        [TestCase(11, 2, 150)]
-        [TestCase(31, 6, 250)]
-        public void RewardProgression_UsesZeroBasedTiers(int zoneNumber, int expectedTier, long expectedQuantity)
+        [TestCase(2, 0, 125)]
+        [TestCase(5, 0, 200)]
+        [TestCase(6, 1, 225)]
+        [TestCase(10, 1, 325)]
+        [TestCase(11, 2, 350)]
+        [TestCase(31, 6, 850)]
+        public void RewardProgression_GrowsEveryZoneWhileEligibilityUsesZeroBasedTiers(int zoneNumber, int expectedTier, long expectedQuantity)
         {
             ZoneRules rules = CreateRules();
 
             Assert.That(rules.GetRewardTier(zoneNumber), Is.EqualTo(expectedTier));
             Assert.That(rules.GetRewardQuantity(zoneNumber, 100, 25), Is.EqualTo(expectedQuantity));
+        }
+
+        [TestCase(1, 1, 100)]
+        [TestCase(2, 2, 210)]
+        [TestCase(5, 2, 240)]
+        [TestCase(5, 5, 600)]
+        [TestCase(30, 10, 2450)]
+        public void RewardMultiplier_AppliesAfterEveryZoneGrowth(int zone, int multiplier, long expected)
+        {
+            var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 1000000);
+            Assert.That(rules.GetRewardQuantity(zone, 100, 5, multiplier), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void QuantityGrowth_DoesNotDependOnPoolEligibilityCadence()
+        {
+            var slowEligibility = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 1000000);
+            var fastEligibility = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 2, 1000000);
+            Assert.That(slowEligibility.GetRewardTier(5), Is.Zero);
+            Assert.That(fastEligibility.GetRewardTier(5), Is.EqualTo(2));
+            Assert.That(slowEligibility.GetRewardQuantity(5, 100, 5, 2), Is.EqualTo(240));
+            Assert.That(fastEligibility.GetRewardQuantity(5, 100, 5, 2), Is.EqualTo(240));
+            Assert.That(slowEligibility.GetRewardQuantity(int.MaxValue, 7, 0, 5), Is.EqualTo(35));
+        }
+
+        [Test]
+        public void QuantitySaturation_MatchesUnboundedArithmeticAtIntegerLimits()
+        {
+            foreach (long cap in new[] { 1L, 1000L, long.MaxValue })
+            {
+                var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, cap);
+                foreach (int zone in new[] { 1, 2, 30, int.MaxValue })
+                foreach (long initial in new[] { 1L, Math.Max(1, cap - 1), cap, long.MaxValue })
+                foreach (long growth in new[] { 0L, 1L, long.MaxValue / 2, long.MaxValue })
+                foreach (int multiplier in new[] { 1, 2, 5, 10, int.MaxValue })
+                {
+                    var unbounded = ((System.Numerics.BigInteger)initial + (System.Numerics.BigInteger)(zone - 1) * growth) * multiplier;
+                    long expected = (long)System.Numerics.BigInteger.Min(cap, unbounded);
+                    Assert.That(rules.GetRewardQuantity(zone, initial, growth, multiplier), Is.EqualTo(expected),
+                        $"zone={zone}, base={initial}, growth={growth}, multiplier={multiplier}, cap={cap}");
+                }
+            }
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void RewardQuantity_RejectsInvalidMultipliers(int multiplier)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => CreateRules().GetRewardQuantity(1, 100, 5, multiplier));
         }
 
         [Test]
@@ -95,6 +145,7 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => rules.GetZoneType(zoneNumber));
             Assert.Throws<ArgumentOutOfRangeException>(() => rules.AllowsCashOut(zoneNumber));
             Assert.Throws<ArgumentOutOfRangeException>(() => rules.GetRewardTier(zoneNumber));
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.GetRewardQuantity(zoneNumber, 1, 1));
         }
 
         [Test]

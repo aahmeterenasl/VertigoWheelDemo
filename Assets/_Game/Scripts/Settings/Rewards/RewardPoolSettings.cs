@@ -47,12 +47,13 @@ namespace VertigoWheel.Settings
             }
         }
 
-        public IReadOnlyList<RewardPoolEntryData> CreateEntries(int zoneNumber, ZoneRules rules)
+        public IReadOnlyList<RewardPoolEntryData> CreateEntries(int zoneNumber, ZoneRules rules, int quantityMultiplier = 1)
         {
             if (rules == null)
             {
                 throw new ArgumentNullException(nameof(rules));
             }
+            if (quantityMultiplier < 1) throw new ArgumentOutOfRangeException(nameof(quantityMultiplier));
             Validate();
             int tier = rules.GetRewardTier(zoneNumber);
             List<RewardPoolEntryData> entries = new List<RewardPoolEntryData>();
@@ -60,7 +61,7 @@ namespace VertigoWheel.Settings
             {
                 if (entry.IsEligible(tier))
                 {
-                    entries.Add(new RewardPoolEntryData(entry.RewardSlot.CreateData(zoneNumber, rules), entry.PoolWeight));
+                    entries.Add(new RewardPoolEntryData(entry.RewardSlot.CreateData(zoneNumber, rules, quantityMultiplier), entry.PoolWeight));
                 }
             }
 

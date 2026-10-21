@@ -23,47 +23,48 @@ MonoBehaviour:
   _pointerAngleDegrees: 0
   _slotRadiusRatio: 0.3
   _slotSizeRatio: 0.17
+  _quantityMultiplier: 2
   _slots:
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}
     _baseQuantity: 500
-    _quantityIncreasePerTier: 50
+    _quantityIncreasePerZone: 50
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
     _baseQuantity: 10
-    _quantityIncreasePerTier: 2
+    _quantityIncreasePerZone: 2
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 360565de424dff74598558228bccb7f5, type: 2}
     _baseQuantity: 40
-    _quantityIncreasePerTier: 10
+    _quantityIncreasePerZone: 10
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: a7cd22e616fee6345a132bcb0406208f, type: 2}
     _baseQuantity: 40
-    _quantityIncreasePerTier: 10
+    _quantityIncreasePerZone: 10
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: a538a7eb37f8f234f9210b10c9dbe7a8, type: 2}
     _baseQuantity: 3
-    _quantityIncreasePerTier: 1
+    _quantityIncreasePerZone: 1
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: d2cefe06eb300064da7ee0bae076ef9d, type: 2}
     _baseQuantity: 3
-    _quantityIncreasePerTier: 1
+    _quantityIncreasePerZone: 1
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 974889d19ef41774fae88d0058b8d65f, type: 2}
     _baseQuantity: 1
-    _quantityIncreasePerTier: 1
+    _quantityIncreasePerZone: 1
     _landingWeight: 1
   - _outcomeKind: 0
     _reward: {fileID: 11400000, guid: 030d7e86a5ed579418a531147d2dd45a, type: 2}
     _baseQuantity: 1
-    _quantityIncreasePerTier: 1
+    _quantityIncreasePerZone: 1
     _landingWeight: 1
-  _pool: {fileID: 11400000, guid: 157207276eb810a4eb0b3a32dd11a1fd, type: 2}
+  _pool: {fileID: 11400000, guid: 08da3d95516fe0a47b20b226c0adddfd, type: 2}
   _bombSlotIndex: 7
   _bombLandingWeight: 1

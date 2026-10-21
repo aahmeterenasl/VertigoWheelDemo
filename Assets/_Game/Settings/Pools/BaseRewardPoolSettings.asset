@@ -1,0 +1,348 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6d76ca22bec584a8eba08ea26af042, type: 3}
+  m_Name: BaseRewardPoolSettings
+  m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.RewardPoolSettings
+  _entries:
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 2e455c720fd4d4d4e92b0efb1bcead01, type: 2}
+      _baseQuantity: 100
+      _quantityIncreasePerZone: 5
+      _landingWeight: 1
+    _poolWeight: 60
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 5
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 30
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 360565de424dff74598558228bccb7f5, type: 2}
+      _baseQuantity: 20
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: a7cd22e616fee6345a132bcb0406208f, type: 2}
+      _baseQuantity: 20
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: a538a7eb37f8f234f9210b10c9dbe7a8, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: d2cefe06eb300064da7ee0bae076ef9d, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: f4b8fef09c757a74e91bde1a5cb85cc8, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 974889d19ef41774fae88d0058b8d65f, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 8
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 030d7e86a5ed579418a531147d2dd45a, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 4
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 2b4a030e8e8bd554bacbcdc9cc22c3ee, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: ca15132020c4e8140ae5a524c8ba9e36, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 457e375417ec15b47b50e76828d9c8eb, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 7692fcc1c0cdf5b44b021a1c1b6b8107, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: e2d3796689f05fb44a90e9570a91b7d3, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 65605279886ff804cacb04e115fca69c, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 3e0d5f3a26c91094d8c9c964851cf2bf, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 1fedf1d23bd79ac48a7053eb91d33958, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: aa55c4244a798024a862bd616cae8bf1, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 3
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: c817c5cc6312a9d458e9d8d1e11f2cd9, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 3
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 0ba379b35be886b4e9c4dfa2b13d7e7b, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 3
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 8e9f16fbb9a10be4cb6311367701df24, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 2
+    _minimumTier: 2
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: a27d3059288c6c541aae26938499f2ff, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 4
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 91d95fb88f6fde04da95b258907709c6, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 12
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 53b88a522c9c03b479f570875a869706, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 8
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: fd021799ca53c0743946086f67e4222a, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 4
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: b35c4a4e5e1a4c640bec16d2e67068a2, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 3
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6128bfe9d098004409e5ba46ab7ed4a7, type: 2}
+      _baseQuantity: 1
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 3
+    _minimumTier: 1
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 8644bb929ae0b0241b39d6fad43fb3ca, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 42111289c0609734cb04bcfac6a09ebd, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: b88e68336dcae1f4eabf197a6d070adf, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 9ba9fbabcc568394d850ce6b03ebf9a7, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 8da1f90900d7bb843adf4de26fd66b4a, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6d2937e5caa31c34e8e2478f055bbf8a, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 76194394765b7db429d19eb2227af8f3, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: be9e57b4223c90345804fe4a6ad8d6f6, type: 2}
+      _baseQuantity: 10
+      _quantityIncreasePerZone: 1
+      _landingWeight: 1
+    _poolWeight: 20
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 100
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 5
+    _minimumTier: 0
+    _maximumTier: -1
+  - _rewardSlot:
+      _outcomeKind: 0
+      _reward: {fileID: 11400000, guid: 6578754b960cb10448ffe5254c592502, type: 2}
+      _baseQuantity: 1000
+      _quantityIncreasePerZone: 0
+      _landingWeight: 1
+    _poolWeight: 1
+    _minimumTier: 2
+    _maximumTier: -1

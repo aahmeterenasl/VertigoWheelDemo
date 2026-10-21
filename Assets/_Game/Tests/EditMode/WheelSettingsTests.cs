@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -64,8 +65,8 @@ namespace VertigoWheel.Tests.EditMode
             game.BronzeWheel.GetSlot(0).BaseQuantity = 400;
             WheelData updated = game.CreateWheelData(6, new SequenceRandomSource(0));
 
-            Assert.That(previous.Slots[0].Quantity, Is.EqualTo(125));
-            Assert.That(updated.Slots[0].Quantity, Is.EqualTo(425));
+            Assert.That(previous.Slots[0].Quantity, Is.EqualTo(225));
+            Assert.That(updated.Slots[0].Quantity, Is.EqualTo(525));
         }
 
         [Test]
@@ -176,7 +177,7 @@ namespace VertigoWheel.Tests.EditMode
             WheelSlotSettings slot = new WheelSlotSettings();
             Assert.Throws<ArgumentOutOfRangeException>(() => slot.OutcomeKind = (SlotOutcomeKind)99);
             Assert.Throws<ArgumentOutOfRangeException>(() => slot.BaseQuantity = -1);
-            Assert.Throws<ArgumentOutOfRangeException>(() => slot.QuantityIncreasePerTier = -1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => slot.QuantityIncreasePerZone = -1);
             WheelSettings wheel = CreateWheel(false);
             Assert.Throws<ArgumentOutOfRangeException>(() => wheel.GetSlot(8));
             Assert.Throws<ArgumentOutOfRangeException>(() => wheel.SetSlot(-1, slot));
@@ -277,7 +278,7 @@ namespace VertigoWheel.Tests.EditMode
 
             WheelData wheel = game.CreateWheelData(30, random);
 
-            Assert.That(wheel.Slots[0].Quantity, Is.EqualTo(1125));
+            Assert.That(wheel.Slots[0].Quantity, Is.EqualTo(1725));
             Assert.That(random.SamplesConsumed, Is.Zero);
             Assert.That(game.GetWheelSettingsForZone(30), Is.SameAs(exact));
             Assert.That(game.GetWheelSettingsForZone(60), Is.SameAs(game.GoldenWheel));
@@ -319,9 +320,123 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => entry.RewardSlot.LandingWeight = 0);
         }
 
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(5)]
+        [TestCase(10)]
+        public void FixedAndGeneratedWheels_ScaleTheSameBaselineOnce_AndPreserveWeights(int multiplier)
+        {
+            WheelSettings wheel = CreateWheel(false);
+            wheel.QuantityMultiplier = multiplier;
+            wheel.GetSlot(0).LandingWeight = 7;
+            AddPool(wheel);
+            wheel.Pool.GetEntry(0).PoolWeight = 13;
+            var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, long.MaxValue);
+            WheelData fixedWheel = wheel.CreateData(5, rules);
+            WheelData generated = wheel.CreateFromPool(5, rules, new SequenceRandomSource(0));
+            Assert.That(generated.Slots.Select(s => s.Quantity), Is.EqualTo(fixedWheel.Slots.Select(s => s.Quantity)));
+            Assert.That(fixedWheel.Slots[0].Quantity, Is.EqualTo(200L * multiplier));
+            Assert.That(generated.Slots[0].LandingWeight, Is.EqualTo(7));
+            Assert.That(wheel.Pool.GetEntry(0).PoolWeight, Is.EqualTo(13));
+            Assert.That(wheel.Pool.GetEntry(0).RewardSlot.BaseQuantity, Is.EqualTo(100));
+            Assert.That(wheel.Pool.GetEntry(0).RewardSlot.QuantityIncreasePerZone, Is.EqualTo(25));
+            WheelData normal = wheel.CreateFromPool(2, rules, new SequenceRandomSource(0));
+            Assert.That(normal.Slots[7].OutcomeKind, Is.EqualTo(SlotOutcomeKind.Bomb));
+            Assert.That(normal.Slots[7].Quantity, Is.Zero);
+            Assert.That(normal.Slots[7].LandingWeight, Is.EqualTo(wheel.BombLandingWeight));
+        }
+
+        [Test]
+        public void OneSharedPool_CanProduceDifferentWheelMultipliersWithoutChangingItsAmounts()
+        {
+            WheelSettings bronze = CreateWheel(false);
+            AddPool(bronze);
+            WheelSettings silver = CreateWheel(false);
+            WheelSettings golden = CreateWheel(false);
+            silver.Pool = golden.Pool = bronze.Pool;
+            silver.QuantityMultiplier = 2;
+            golden.QuantityMultiplier = 10;
+            var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, long.MaxValue);
+            long baseline = bronze.CreateFromPool(5, rules, new SequenceRandomSource(0)).Slots[0].Quantity;
+            Assert.That(silver.CreateFromPool(5, rules, new SequenceRandomSource(0)).Slots[0].Quantity, Is.EqualTo(baseline * 2));
+            Assert.That(golden.CreateFromPool(5, rules, new SequenceRandomSource(0)).Slots[0].Quantity, Is.EqualTo(baseline * 10));
+            Assert.That(bronze.Pool.GetEntry(0).RewardSlot.BaseQuantity, Is.EqualTo(100));
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void InvalidQuantityMultipliers_AreRejectedBySettersAndBothSerializedWheelPaths(int multiplier)
+        {
+            WheelSettings wheel = CreateWheel(false);
+            AddPool(wheel);
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.QuantityMultiplier = multiplier);
+            Assert.That(wheel.QuantityMultiplier, Is.EqualTo(1));
+            using (var data = new SerializedObject(wheel))
+            {
+                data.FindProperty("_quantityMultiplier").intValue = multiplier;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.Validate(ZoneType.Safe));
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.ValidatePool());
+            Assert.Throws<ArgumentOutOfRangeException>(() => wheel.Pool.CreateEntries(5, new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 1000), multiplier));
+        }
+
+        [Test]
+        public void MultipliedOutcomes_AreDeduplicatedAfterClamping_BeforeAnyRandomDraw()
+        {
+            WheelSettings wheel = CreateWheel(false);
+            for (int i = 0; i < wheel.SlotCount; i++) wheel.GetSlot(i).QuantityIncreasePerZone = 0;
+            AddPool(wheel);
+            var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 205);
+            Assert.DoesNotThrow(() => wheel.CreateFromPool(5, rules, new SequenceRandomSource(0)));
+            wheel.QuantityMultiplier = 2;
+            var random = new SequenceRandomSource(0);
+            Assert.Throws<InvalidOperationException>(() => wheel.CreateFromPool(5, rules, random));
+            Assert.That(random.SamplesConsumed, Is.Zero);
+            Assert.Throws<ArgumentException>(() => wheel.CreateData(5, rules));
+        }
+
+        [Test]
+        public void PoolScaling_PreservesTierEligibilityAndIndependentAppearanceAndLandingWeights()
+        {
+            var pool = Create<RewardPoolSettings>();
+            var low = CreateRewardSlot(100);
+            low.QuantityIncreasePerZone = 5;
+            low.LandingWeight = 7;
+            pool.SetEntries(new[] {
+                new RewardPoolEntrySettings {RewardSlot = low, PoolWeight = 13, MaximumTier = 0},
+                new RewardPoolEntrySettings {RewardSlot = CreateRewardSlot(1000), PoolWeight = 3, MinimumTier = 1}
+            });
+            var rules = new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, long.MaxValue);
+            var early = pool.CreateEntries(5, rules, 2);
+            Assert.That(early.Count, Is.EqualTo(1));
+            Assert.That(early[0].Reward.Quantity, Is.EqualTo(240));
+            Assert.That(early[0].PoolWeight, Is.EqualTo(13));
+            Assert.That(early[0].Reward.LandingWeight, Is.EqualTo(7));
+            var nextTier = pool.CreateEntries(6, rules, 2);
+            Assert.That(nextTier.Count, Is.EqualTo(1));
+            Assert.That(nextTier[0].Reward.Quantity, Is.EqualTo(2000));
+            Assert.That(nextTier[0].PoolWeight, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void SerializedQuantitiesAndMultiplier_RoundTripWithoutLosingLongPrecision()
+        {
+            WheelSettings source = CreateWheel(false);
+            source.QuantityMultiplier = 10;
+            source.GetSlot(0).BaseQuantity = long.MaxValue - 70;
+            source.GetSlot(0).QuantityIncreasePerZone = long.MaxValue - 100;
+            WheelSettings restored = CreateWheel(false);
+            Assert.That(restored.QuantityMultiplier, Is.EqualTo(1));
+            EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(source), restored);
+            Assert.That(restored.GetSlot(0).BaseQuantity, Is.EqualTo(long.MaxValue - 70));
+            Assert.That(restored.GetSlot(0).QuantityIncreasePerZone, Is.EqualTo(long.MaxValue - 100));
+            Assert.That(restored.QuantityMultiplier, Is.EqualTo(10));
+        }
+
         private WheelSlotSettings CreateRewardSlot(long quantity)
         {
-            return new WheelSlotSettings { Reward = _reward, BaseQuantity = quantity, QuantityIncreasePerTier = 0 };
+            return new WheelSlotSettings { Reward = _reward, BaseQuantity = quantity, QuantityIncreasePerZone = 0 };
         }
 
         private T Create<T>() where T : ScriptableObject
@@ -351,7 +466,7 @@ namespace VertigoWheel.Tests.EditMode
                 {
                     Reward = _reward,
                     BaseQuantity = 100 + index,
-                    QuantityIncreasePerTier = 25
+                    QuantityIncreasePerZone = 25
                 });
             }
 
@@ -398,7 +513,7 @@ namespace VertigoWheel.Tests.EditMode
             {
                 OutcomeKind = SlotOutcomeKind.Bomb,
                 BaseQuantity = 0,
-                QuantityIncreasePerTier = 0
+                QuantityIncreasePerZone = 0
             };
         }
     }

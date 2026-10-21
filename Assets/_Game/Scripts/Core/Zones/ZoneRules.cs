@@ -93,34 +93,25 @@ namespace VertigoWheel.Core.Zones
             return (zoneNumber - 1) / _rewardTierInterval;
         }
 
-        public long GetRewardQuantity(int zoneNumber, long baseQuantity, long increasePerTier)
+        /// <summary>Per-zone linear growth, then wheel scaling; both saturate safely at the payout cap.</summary>
+        public long GetRewardQuantity(int zoneNumber, long baseQuantity, long increasePerZone, int quantityMultiplier = 1)
         {
-            if (baseQuantity < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(baseQuantity));
-            }
+            ValidateZoneNumber(zoneNumber);
+            if (baseQuantity < 1) throw new ArgumentOutOfRangeException(nameof(baseQuantity));
+            if (increasePerZone < 0) throw new ArgumentOutOfRangeException(nameof(increasePerZone));
+            if (quantityMultiplier < 1) throw new ArgumentOutOfRangeException(nameof(quantityMultiplier));
 
-            if (increasePerTier < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(increasePerTier));
-            }
-
-            int tier = GetRewardTier(zoneNumber);
+            long elapsedZones = (long)zoneNumber - 1;
             long quantity = Math.Min(baseQuantity, _maximumRewardQuantity);
-
-            if (tier == 0 || increasePerTier == 0)
-            {
-                return quantity;
-            }
-
-            // Check remaining capacity before multiplying to avoid long overflow.
             long remaining = _maximumRewardQuantity - quantity;
-            if (increasePerTier > remaining / tier)
-            {
+            if (elapsedZones > 0 && increasePerZone > remaining / elapsedZones)
                 return _maximumRewardQuantity;
-            }
+            quantity += increasePerZone * elapsedZones;
 
-            return quantity + increasePerTier * tier;
+            // Scaling a saturated positive quantity cannot bring it back below the cap.
+            // Divide before multiplying, so even long.MaxValue and int.MaxValue are safe.
+            return quantity > _maximumRewardQuantity / quantityMultiplier
+                ? _maximumRewardQuantity : quantity * quantityMultiplier;
         }
 
         private static void ValidateZoneNumber(int zoneNumber)

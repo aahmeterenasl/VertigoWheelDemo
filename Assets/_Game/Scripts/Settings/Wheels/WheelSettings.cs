@@ -49,6 +49,17 @@ namespace VertigoWheel.Settings
         [Tooltip("Slot size relative to the wheel diameter.")]
         private float _slotSizeRatio = 0.17f;
 
+        [Header("Reward quantities")]
+        [SerializeField, Min(1)]
+        [Tooltip("Scales reward amounts after per-zone growth, for both fixed slots and generated wheels.")]
+        private int _quantityMultiplier = 1;
+
+        public int QuantityMultiplier
+        {
+            get => _quantityMultiplier;
+            set { ValidateQuantityMultiplier(value); _quantityMultiplier = value; }
+        }
+
         [Header("Fixed slots for exact-zone overrides")]
         [SerializeField]
         private WheelSlotSettings[] _slots = new WheelSlotSettings[WheelData.SlotCount];
@@ -211,6 +222,7 @@ namespace VertigoWheel.Settings
                 throw new InvalidOperationException($"Wheel '{name}' needs base/pointer sprites and exactly eight slots.");
             }
 
+            ValidateQuantityMultiplier(_quantityMultiplier);
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
             ValidateColor(_spinButtonColor);
@@ -253,7 +265,7 @@ namespace VertigoWheel.Settings
             WheelSlotData[] slots = new WheelSlotData[SlotCount];
             for (int index = 0; index < slots.Length; index++)
             {
-                slots[index] = _slots[index].CreateData(zoneNumber, rules);
+                slots[index] = _slots[index].CreateData(zoneNumber, rules, _quantityMultiplier);
             }
 
             return new WheelData(zoneNumber, zoneType, slots);
@@ -267,6 +279,7 @@ namespace VertigoWheel.Settings
                 throw new InvalidOperationException($"Wheel '{name}' needs sprites, a pool, and valid bomb settings.");
             }
 
+            ValidateQuantityMultiplier(_quantityMultiplier);
             ValidateFiniteAngle(_slotZeroAngleDegrees);
             ValidateFiniteAngle(_pointerAngleDegrees);
             ValidateColor(_spinButtonColor);
@@ -284,7 +297,7 @@ namespace VertigoWheel.Settings
             }
             ValidatePool();
             return new WheelGenerator().Generate(zoneNumber, rules.GetZoneType(zoneNumber),
-                _pool.CreateEntries(zoneNumber, rules), random, _bombSlotIndex, _bombLandingWeight);
+                _pool.CreateEntries(zoneNumber, rules, _quantityMultiplier), random, _bombSlotIndex, _bombLandingWeight);
         }
 
         private void ValidateSlotIndex(int index)
@@ -293,6 +306,11 @@ namespace VertigoWheel.Settings
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
+        }
+
+        private static void ValidateQuantityMultiplier(int value)
+        {
+            if (value < 1) throw new ArgumentOutOfRangeException(nameof(value), "Wheel quantity multipliers must be positive whole numbers.");
         }
 
         private static void ValidateFiniteAngle(float value)

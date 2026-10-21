@@ -15,6 +15,7 @@ namespace VertigoWheel.Settings
         private int _poolWeight = 1;
 
         [SerializeField, Min(0)]
+        [Tooltip("First eligible pool tier, using ZoneSettings.RewardTierInterval. Independent of quantity growth.")]
         private int _minimumTier;
 
         [SerializeField, Min(-1)]
