@@ -30,6 +30,8 @@ namespace VertigoWheel.App
         private ActiveModal _modal;
         private SpinTicket _activeTicket;
         private SpinTicket _arrivalTicket;
+        private bool _arrivalFlightFinished;
+        private bool _arrivalZoneFinished;
         private WheelData _boundWheel;
         private RunSnapshot _lastSnapshot;
         private ZoneRules _lastRules;
@@ -92,9 +94,10 @@ namespace VertigoWheel.App
             if (!_disposed && _arrivalTicket != null)
             {
                 SpinTicket arrival = _arrivalTicket;
+                _view.ZoneTransition?.CompleteImmediately();
                 _rewardReveal.Hide();
                 if (_view.RewardArrival == null || !_view.RewardArrival.CompleteImmediately())
-                    FinishArrival(arrival);
+                    HandleArrivalFlightFinished(arrival);
                 return;
             }
             if (_disposed || _run.State != RunState.Spinning
@@ -118,6 +121,7 @@ namespace VertigoWheel.App
             _arrivalTicket = null;
             if (_view != null)
             {
+                _view.ZoneTransition?.Cancel();
                 _view.CompleteRewardFeedback();
                 _view.RewardArrival?.Cancel();
                 if (_view.Wheel != null)
@@ -266,29 +270,54 @@ namespace VertigoWheel.App
                     ShowSummary(_run.Summary);
                     return;
                 }
-                BindPreparedWheel();
-                if (captured)
+                _arrivalTicket = ticket;
+                _arrivalFlightFinished = false;
+                _arrivalZoneFinished = false;
+                _rewardReveal.Hide(captured ? _uiAnimation.RewardFlightFadeDurationSeconds : 0f);
+                if (_view.ZoneTransition != null)
                 {
-                    _arrivalTicket = ticket;
-                    Render();
-                    _rewardReveal.Hide(_uiAnimation.RewardFlightFadeDurationSeconds);
-                    if (_view.RewardArrival.TryPlay(ticket.Outcome.RewardId, _uiAnimation, () => FinishArrival(ticket)))
-                        return;
-                    FinishArrival(ticket);
-                    return;
+                    _view.ZoneTransition.Play(_run.Wheel.ZoneType, _uiAnimation, () =>
+                    {
+                        BindPreparedWheel();
+                        Render();
+                    }, () => HandleArrivalZoneFinished(ticket));
                 }
-                _rewardReveal.Hide();
-                _view.PlayRewardArrival(_uiAnimation);
-                _modal = ActiveModal.None;
-                Render();
+                else
+                {
+                    BindPreparedWheel();
+                    Render();
+                    HandleArrivalZoneFinished(ticket);
+                }
+                if (captured && _view.RewardArrival.TryPlay(ticket.Outcome.RewardId, _uiAnimation,
+                    () => HandleArrivalFlightFinished(ticket))) return;
+                HandleArrivalFlightFinished(ticket);
             }, ShowReward);
+        }
+
+        private void HandleArrivalZoneFinished(SpinTicket ticket)
+        {
+            if (_disposed || !ReferenceEquals(_arrivalTicket, ticket)) return;
+            _arrivalZoneFinished = true;
+            TryFinishArrival(ticket);
+        }
+
+        private void HandleArrivalFlightFinished(SpinTicket ticket)
+        {
+            if (_disposed || !ReferenceEquals(_arrivalTicket, ticket)) return;
+            _arrivalFlightFinished = true;
+            _view.PlayRewardArrival(_uiAnimation);
+            TryFinishArrival(ticket);
+        }
+
+        private void TryFinishArrival(SpinTicket ticket)
+        {
+            if (_arrivalFlightFinished && _arrivalZoneFinished) FinishArrival(ticket);
         }
 
         private void FinishArrival(SpinTicket ticket)
         {
             if (_disposed || !ReferenceEquals(_arrivalTicket, ticket)) return;
             _arrivalTicket = null;
-            _view.PlayRewardArrival(_uiAnimation);
             _view.RewardArrival?.Cancel();
             _rewardReveal.Hide();
             _modal = ActiveModal.None;
@@ -362,6 +391,7 @@ namespace VertigoWheel.App
             {
                 CaptureAnimation();
                 ValidateWheelSources(1);
+                _view.ZoneTransition?.Cancel();
                 _run.Restart();
                 _arrivalTicket = null;
                 _view.RewardArrival?.Cancel();
@@ -497,6 +527,9 @@ namespace VertigoWheel.App
             _uiAnimation.RewardIconStartScale = source.RewardIconStartScale;
             _uiAnimation.RewardIconPeakScale = source.RewardIconPeakScale;
             _uiAnimation.RewardTextOffset = source.RewardTextOffset;
+            _uiAnimation.ZoneTransitionSeconds = source.ZoneTransitionSeconds;
+            _uiAnimation.WheelCrossfadeSeconds = source.WheelCrossfadeSeconds;
+            _uiAnimation.MilestonePulseScale = source.MilestonePulseScale;
             _uiAnimation.LedgerDurationSeconds = source.LedgerDurationSeconds;
             _uiAnimation.LedgerPulseScale = source.LedgerPulseScale;
             _uiAnimation.RewardFlightEnabled = source.RewardFlightEnabled;

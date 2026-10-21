@@ -49,6 +49,10 @@ namespace VertigoWheel.UI.Board
         [SerializeField]
         private RewardArrivalView _rewardArrival;
 
+        [SerializeField] private ZoneTransitionView _zoneTransition;
+
+        public ZoneTransitionView ZoneTransition => _zoneTransition;
+
         private ActionButtonView _listenedExitButton;
         private string _statusMessage = string.Empty;
 

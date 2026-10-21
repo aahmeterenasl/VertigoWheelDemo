@@ -115,7 +115,7 @@ namespace VertigoWheel.Tests.EditMode
         public void CurrentMarker_UsesZoneStyleAndCompletedNumbersAreDimmed(int current, ZoneType type)
         {
             _view.Render(current, Rules());
-            var marker = _view.transform.Find("ui_image_zone_current_value").GetComponent<UnityEngine.UI.Image>();
+            var marker = _view.transform.Find("ui_animation_zone_marker/ui_image_zone_current_value").GetComponent<UnityEngine.UI.Image>();
             Sprite expected = type == ZoneType.Super ? _settings.SuperCurrentBackgroundSprite
                 : type == ZoneType.Safe ? _settings.SafeCurrentBackgroundSprite : _settings.CurrentBackgroundSprite;
             Assert.That(marker.sprite, Is.SameAs(expected));
@@ -135,6 +135,23 @@ namespace VertigoWheel.Tests.EditMode
         {
             _settings.BackgroundSprite = null;
             Assert.Throws<InvalidOperationException>(() => _view.Render(1, Rules()));
+        }
+
+        [Test]
+        public void Motion_OnlyConsumesAConsecutiveAdvance_AndCadenceChangesSnap()
+        {
+            _view.Render(1, Rules());
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.False);
+            _view.Render(5, Rules());
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.False);
+            _view.Render(6, Rules());
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.True);
+            _view.Render(6, Rules());
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.False);
+            _view.Render(7, new ZoneRules(7, 30, CashOutPolicy.AnyZone, 5, 1000000000));
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.False);
+            _view.Render(1, Rules());
+            Assert.That(_view.AnimateAdvance(0f, 1f), Is.False);
         }
 
         private static ZoneRules Rules() => new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, 1000000000);

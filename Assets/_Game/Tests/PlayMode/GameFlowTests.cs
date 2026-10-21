@@ -63,6 +63,8 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.AnimationSettings.SpinDurationSeconds = 2f;
             _settings.AnimationSettings.FullTurns = 1;
             _settings.AnimationSettings.DialogDurationSeconds = 0f;
+            _settings.AnimationSettings.ZoneTransitionSeconds = 0f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 0f;
             _settings.AnimationSettings.RewardRevealDurationSeconds = 0f;
             _settings.AnimationSettings.RewardFlightEnabled = false;
 
@@ -482,6 +484,106 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_run.State, Is.EqualTo(RunState.Failed));
             Assert.That(_bomb.IsReady, Is.True);
             Assert.That(ReadField<UnityEngine.UI.Image>(_bomb, "_icon").sprite, Is.EqualTo(bombIcon));
+        }
+
+        [TestCase(4, 5, ZoneType.Safe)]
+        [TestCase(29, 30, ZoneType.Super)]
+        [TestCase(30, 31, ZoneType.Normal)]
+        [TestCase(59, 60, ZoneType.Super)]
+        public void ZoneTransition_PreparesOnce_AndBlocksBothActions(int start, int expected, ZoneType type)
+        {
+            _controller.Dispose();
+            _run = new RunSession(_settings, _wheelRandom, _landingRandom, start);
+            _controller = new GameController(_settings, _run, _view, _reward, _exit, _bomb, _summary);
+            _settings.AnimationSettings.ZoneTransitionSeconds = 0.12f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 0.08f;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            ClickAction(_reward);
+            Assert.That(_run.ZoneNumber, Is.EqualTo(expected));
+            Assert.That(_view.Wheel.BoundWheel, Is.SameAs(_run.Wheel));
+            Assert.That(_run.Wheel.ZoneType, Is.EqualTo(type));
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.True);
+            int randomCalls = _wheelRandom.CallCount;
+            ClickSpin(); ClickBoardExit(); ClickAction(_reward);
+            Assert.That(_run.PendingSpin, Is.Null);
+            Assert.That(_wheelRandom.CallCount, Is.EqualTo(randomCalls));
+            AssertRewardSettledOnce(ticket);
+            _view.ZoneTransition.CompleteImmediately();
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            ClickSpin();
+            Assert.That(_run.State, Is.EqualTo(RunState.Spinning));
+        }
+
+        [UnityTest]
+        public IEnumerator ZoneTransition_UsesCapturedTiming_AndDoesNotReleaseInputBeforeFlight()
+        {
+            _settings.AnimationSettings.ZoneTransitionSeconds = 0.05f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 0.03f;
+            _settings.AnimationSettings.RewardFlightEnabled = true;
+            _settings.AnimationSettings.RewardFlightDurationSeconds = 0.22f;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            ClickAction(_reward);
+            _settings.AnimationSettings.ZoneTransitionSeconds = 60f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 60f;
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.True);
+            ClickSpin(); ClickBoardExit();
+            Assert.That(_run.PendingSpin, Is.Null);
+            yield return new WaitForSecondsRealtime(0.35f);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.False);
+            AssertRewardSettledOnce(ticket);
+            ClickSpin();
+            Assert.That(_run.State, Is.EqualTo(RunState.Spinning));
+        }
+
+        [UnityTest]
+        public IEnumerator ZoneTransition_ResumeAndDisable_CompleteOnce_WhileDisposeCancels()
+        {
+            _settings.AnimationSettings.ZoneTransitionSeconds = 0.15f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 0.1f;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume(); ClickAction(_reward);
+            _view.ZoneTransition.enabled = false;
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            AssertRewardSettledOnce(ticket);
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+            ClickAction(_exit, "Go Back");
+            _view.ZoneTransition.enabled = true;
+            StartRewardSpin(); _controller.Resume(); ClickAction(_reward);
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.True);
+            _controller.Resume();
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+            ClickAction(_exit, "Go Back");
+            StartRewardSpin(); _controller.Resume(); ClickAction(_reward);
+            _controller.Dispose();
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            yield return new WaitForSecondsRealtime(0.25f);
+            ClickSpin();
+            Assert.That(_run.PendingSpin, Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator ZoneTransition_ResizeRestoresVisuals_AndReleasesTheGate()
+        {
+            _settings.AnimationSettings.ZoneTransitionSeconds = 1f;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = 0.5f;
+            StartRewardSpin(); _controller.Resume(); ClickAction(_reward);
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.True);
+            var rect = (RectTransform)_view.transform;
+            Vector2 original = rect.sizeDelta;
+            rect.sizeDelta += Vector2.right * 20f;
+            yield return null;
+            Assert.That(_view.ZoneTransition.IsPlaying, Is.False);
+            rect.sizeDelta = original;
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
         }
 
         private SpinTicket StartRewardSpin()

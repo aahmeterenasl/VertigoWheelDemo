@@ -36,6 +36,15 @@ namespace VertigoWheel.UI.Common
             Own(sequence);
         }
 
+        public void Slide(float duration, float horizontalOffset)
+        {
+            Complete();
+            if (duration <= 0f || !isActiveAndEnabled) return;
+            _rect.anchoredPosition = Vector2.right * horizontalOffset;
+            Own(DOTween.To(() => _rect.anchoredPosition, value => _rect.anchoredPosition = value,
+                Vector2.zero, duration).SetEase(Ease.OutCubic));
+        }
+
         public void Complete()
         {
             _motion?.Kill(false);

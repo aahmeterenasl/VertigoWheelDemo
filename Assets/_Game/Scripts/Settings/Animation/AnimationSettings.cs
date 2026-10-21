@@ -77,6 +77,29 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0f)] private float _ledgerDurationSeconds = 0.24f;
         [SerializeField, Range(1f, 1.1f)] private float _ledgerPulseScale = 1.06f;
 
+        [Header("Zone transition")]
+        [SerializeField, Min(0f)] private float _zoneTransitionSeconds = 0.26f;
+        [SerializeField, Min(0f)] private float _wheelCrossfadeSeconds = 0.20f;
+        [SerializeField, Range(1f, 1.1f)] private float _milestonePulseScale = 1.04f;
+
+        public float ZoneTransitionSeconds
+        {
+            get => _zoneTransitionSeconds;
+            set { ValidateOptionalDuration(value); _zoneTransitionSeconds = value; }
+        }
+
+        public float WheelCrossfadeSeconds
+        {
+            get => _wheelCrossfadeSeconds;
+            set { ValidateOptionalDuration(value); _wheelCrossfadeSeconds = value; }
+        }
+
+        public float MilestonePulseScale
+        {
+            get => _milestonePulseScale;
+            set { ValidateRange(value, 1f, 1.1f); _milestonePulseScale = value; }
+        }
+
         public float LedgerDurationSeconds
         {
             get => _ledgerDurationSeconds;
@@ -282,6 +305,9 @@ namespace VertigoWheel.Settings
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
+            ValidateOptionalDuration(_zoneTransitionSeconds);
+            ValidateOptionalDuration(_wheelCrossfadeSeconds);
+            ValidateRange(_milestonePulseScale, 1f, 1.1f);
             ValidateOptionalDuration(_ledgerDurationSeconds);
             ValidateRange(_ledgerPulseScale, 1f, 1.1f);
             ValidateDuration(_spinDurationSeconds);

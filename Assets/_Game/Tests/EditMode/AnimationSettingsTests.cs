@@ -44,6 +44,21 @@ namespace VertigoWheel.Tests.EditMode
             Assert.DoesNotThrow(() => _settings.Validate());
         }
 
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        public void InvalidZoneTransitionValues_RejectSetterAndInspectorPaths(float value)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.ZoneTransitionSeconds = value);
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.WheelCrossfadeSeconds = value);
+            using (var data = new SerializedObject(_settings))
+            {
+                data.FindProperty("_zoneTransitionSeconds").floatValue = value;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
+        }
+
         [Test]
         public void DialogDurations_SupportImmediateAndAnimatedReveals()
         {

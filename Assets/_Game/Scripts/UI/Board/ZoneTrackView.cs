@@ -1,5 +1,8 @@
 using System;
+using System.Globalization;
+using TMPro;
 using UnityEngine;
+using VertigoWheel.UI.Common;
 using VertigoWheel.Core.Zones;
 using VertigoWheel.Settings;
 
@@ -19,6 +22,40 @@ namespace VertigoWheel.UI.Board
 
         [SerializeField]
         private UnityEngine.UI.Image _currentBackground;
+
+        [SerializeField] private UiMotionView _markerAccent;
+        [SerializeField] private TMP_Text _departingNumber;
+        [SerializeField] private UiMotionView _numberStrip;
+        private long _departingZone;
+        private Color _departingColor;
+        private int _lastZone;
+        private int _lastSafeInterval;
+        private int _lastSuperInterval;
+        private bool _canAnimateAdvance;
+        private ZoneType _currentType;
+
+        public bool AnimateAdvance(float duration, float accentScale)
+        {
+            if (!_canAnimateAdvance) return false;
+            _canAnimateAdvance = false;
+            float spacing = ((RectTransform)transform).rect.width / _items.Length;
+            _numberStrip?.Slide(duration, spacing);
+            if (_departingNumber != null && _departingZone >= 1)
+            {
+                _departingNumber.text = _departingZone.ToString(CultureInfo.InvariantCulture);
+                _departingNumber.color = _departingColor;
+                _departingNumber.transform.parent.gameObject.SetActive(true);
+            }
+            if (_currentType != ZoneType.Normal) _markerAccent?.Pulse(duration, accentScale);
+            return true;
+        }
+
+        public void CompleteMotion()
+        {
+            _numberStrip?.Complete();
+            _markerAccent?.Complete();
+            if (_departingNumber != null) _departingNumber.transform.parent.gameObject.SetActive(false);
+        }
 
         private Sprite _backgroundSprite;
         private Sprite _currentBackgroundSprite;
@@ -53,8 +90,27 @@ namespace VertigoWheel.UI.Board
                     throw new InvalidOperationException("The zone track contains a missing item.");
                 }
             }
+            bool changed = currentZone != _lastZone || rules.SafeZoneInterval != _lastSafeInterval
+                || rules.SuperZoneInterval != _lastSuperInterval;
+            if (changed)
+            {
+                CompleteMotion();
+                _departingZone = (long)_lastZone - _items.Length / 2;
+                _canAnimateAdvance = _lastZone > 0 && (long)currentZone == (long)_lastZone + 1
+                    && rules.SafeZoneInterval == _lastSafeInterval && rules.SuperZoneInterval == _lastSuperInterval;
+            }
             CaptureStyle();
+            if (_canAnimateAdvance && _departingZone >= 1)
+            {
+                ZoneType type = rules.GetZoneType((int)_departingZone);
+                _departingColor = type == ZoneType.Super ? _superColor : type == ZoneType.Safe ? _safeColor : _normalColor;
+                _departingColor.a *= _completedOpacity;
+            }
             ZoneType currentType = rules.GetZoneType(currentZone);
+            _currentType = currentType;
+            _lastZone = currentZone;
+            _lastSafeInterval = rules.SafeZoneInterval;
+            _lastSuperInterval = rules.SuperZoneInterval;
             _background.sprite = _backgroundSprite;
             _currentBackground.sprite = currentType == ZoneType.Super ? _superCurrentBackgroundSprite
                 : currentType == ZoneType.Safe ? _safeCurrentBackgroundSprite : _currentBackgroundSprite;
