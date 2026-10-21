@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -29,6 +30,7 @@ namespace VertigoWheel.Tests.PlayMode
         private GameView _board;
         private CashOutSummaryView _summary;
         private AnimationSettings _animation;
+        private GameSettings _authored;
         private readonly Dictionary<RewardId, RewardSettings> _catalog = new Dictionary<RewardId, RewardSettings>();
 
         [UnitySetUp]
@@ -38,6 +40,7 @@ namespace VertigoWheel.Tests.PlayMode
             _scene = SceneManager.GetSceneAt(SceneManager.sceneCount - 1);
             GameObject[] roots = _scene.GetRootGameObjects();
             GameBootstrap bootstrap = Find<GameBootstrap>(roots);
+            _authored = (GameSettings)typeof(GameBootstrap).GetField("_settings", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(bootstrap);
             bootstrap.enabled = false;
             _canvas = Find<Canvas>(roots);
             _board = Find<GameView>(roots);
@@ -62,6 +65,8 @@ namespace VertigoWheel.Tests.PlayMode
             _animation = ScriptableObject.CreateInstance<AnimationSettings>();
             _animation.DialogDurationSeconds = 0;
             _animation.SummaryEntranceSeconds = 0;
+            _animation.BombEntranceSeconds = 0;
+            _animation.RewardRevealDurationSeconds = 0;
             yield return null;
         }
 
@@ -83,6 +88,15 @@ namespace VertigoWheel.Tests.PlayMode
             RewardCollectionView ledger = _board.GetComponentInChildren<RewardCollectionView>();
             ledger.SetRewards(rewards, _catalog, true);
             _summary.Show(collected, _catalog, _animation);
+            var source = new SummarySettingsSource(_catalog.Keys.ToArray());
+            var run = new RunSession(source, new ZeroRandomSource(), new ZeroRandomSource(), 2147483600);
+            _board.Wheel.Bind(run.Wheel, _authored.GetWheelSettingsForZone(run.ZoneNumber), _catalog, _authored.BombIcon);
+            _board.Render(run.CreateSnapshot(), source.CreateZoneRules(), _catalog, false);
+            ledger.SetRewards(rewards, _catalog, true);
+            var bomb = Find<BombResultView>(_scene.GetRootGameObjects());
+            var reveal = Find<RewardRevealView>(_scene.GetRootGameObjects());
+            bomb.Show(_authored.BombIcon, rewards, _catalog, _animation);
+            reveal.Show(_catalog[RewardId.Cash], long.MaxValue, _animation);
             SafeAreaView[] safeAreas = _canvas.GetComponentsInChildren<SafeAreaView>(true);
             Assert.That(safeAreas.Length, Is.EqualTo(5), "Board and all four dialogs need safe-area containers.");
 
@@ -130,6 +144,39 @@ namespace VertigoWheel.Tests.PlayMode
                         {
                             text.ForceMeshUpdate();
                             Assert.That(text.isTextOverflowing, Is.False, size + ": " + text.text);
+                            AssertTextInside(text, (RectTransform)item.transform);
+                        }
+                    }
+                    foreach (TMP_Text text in _board.transform.Find("ui_panel_next_zones").GetComponentsInChildren<TMP_Text>())
+                    {
+                        text.ForceMeshUpdate();
+                        Assert.That(text.isTextOverflowing, Is.False, size + ": milestone " + text.text);
+                        AssertTextInside(text, (RectTransform)text.transform.parent);
+                    }
+                    foreach (ZoneItemView item in _board.GetComponentsInChildren<ZoneItemView>())
+                    {
+                        TMP_Text text = item.GetComponentInChildren<TMP_Text>();
+                        text.ForceMeshUpdate();
+                        Assert.That(text.isTextOverflowing, Is.False, size + ": zone " + text.text);
+                        Assert.That(text.fontSize, Is.GreaterThanOrEqualTo(27.9f));
+                        AssertTextInside(text, (RectTransform)item.transform);
+                    }
+                    TMP_Text quantity = reveal.GetComponentsInChildren<TMP_Text>().Single(t => t.name.Contains("quantity"));
+                    quantity.ForceMeshUpdate();
+                    Assert.That(quantity.text, Is.EqualTo("x9.2Qi"));
+                    Assert.That(quantity.isTextOverflowing, Is.False);
+                    AssertTextInside(quantity, quantity.rectTransform);
+                    foreach (var slot in _board.Wheel.GetComponentsInChildren<VertigoWheel.UI.Wheel.WheelSlotView>())
+                    {
+                        TMP_Text text = slot.GetComponentInChildren<TMP_Text>();
+                        if (text == null) continue;
+                        text.ForceMeshUpdate();
+                        Assert.That(text.isTextOverflowing, Is.False, text.text);
+                        Bounds bounds = text.textBounds;
+                        foreach (Vector3 corner in Corners(bounds))
+                        {
+                            Vector3 local = slot.transform.InverseTransformPoint(text.transform.TransformPoint(corner));
+                            Assert.That(local.magnitude, Is.LessThanOrEqualTo(((RectTransform)slot.transform).rect.width * .43f + .1f));
                         }
                     }
                     foreach (ActionButtonView button in _canvas.GetComponentsInChildren<ActionButtonView>(true))
@@ -174,6 +221,24 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(inner.yMax, Is.LessThanOrEqualTo(outer.yMax + .1f), child.name);
         }
 
+        private static IEnumerable<Vector3> Corners(Bounds bounds)
+        {
+            yield return new Vector3(bounds.min.x, bounds.min.y);
+            yield return new Vector3(bounds.min.x, bounds.max.y);
+            yield return new Vector3(bounds.max.x, bounds.min.y);
+            yield return new Vector3(bounds.max.x, bounds.max.y);
+        }
+
+        private static void AssertTextInside(TMP_Text text, RectTransform container)
+        {
+            foreach (Vector3 corner in Corners(text.textBounds))
+            {
+                Vector3 local = container.InverseTransformPoint(text.transform.TransformPoint(corner));
+                Assert.That(local.x, Is.InRange(container.rect.xMin - .1f, container.rect.xMax + .1f), text.name + " " + text.text);
+                Assert.That(local.y, Is.InRange(container.rect.yMin - .1f, container.rect.yMax + .1f), text.name + " " + text.text);
+            }
+        }
+
         private static RunSummary CreateFullSummary(RewardId[] ids)
         {
             RunSession run = new RunSession(new SummarySettingsSource(ids), new ZeroRandomSource(), new ZeroRandomSource());
@@ -194,6 +259,11 @@ namespace VertigoWheel.Tests.PlayMode
 
         private sealed class SummarySettingsSource : IRunSettingsSource
         {
+            private static readonly long[] Quantities =
+            {
+                long.MaxValue, 99999999999999999L, 999999L, 1000000L,
+                999999999999999999L, 999999999L, 99999L, 1L
+            };
             private readonly RewardId[] _ids;
             public SummarySettingsSource(RewardId[] ids) => _ids = ids;
             public ZoneRules CreateZoneRules() => new ZoneRules(5, 30, CashOutPolicy.AnyZone, 5, long.MaxValue);
@@ -204,7 +274,7 @@ namespace VertigoWheel.Tests.PlayMode
                 for (int index = 0; index < slots.Length; index++)
                     slots[index] = type == ZoneType.Normal && index == slots.Length - 1
                         ? WheelSlotData.CreateBomb(1)
-                        : WheelSlotData.CreateReward(_ids[(zoneNumber - 1 + index) % _ids.Length], long.MaxValue, 1);
+                        : WheelSlotData.CreateReward(_ids[(zoneNumber - 1 + index) % _ids.Length], Quantities[index], 1);
                 return new WheelData(zoneNumber, type, slots);
             }
         }

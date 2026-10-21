@@ -115,6 +115,9 @@ namespace VertigoWheel.Tests.EditMode
         [TestCase(64f, 1L)]
         [TestCase(129f, 100000L)]
         [TestCase(256f, long.MaxValue)]
+        [TestCase(64f, 999999L)]
+        [TestCase(129f, 99999999999999999L)]
+        [TestCase(256f, 999999999999999999L)]
         public void RewardContent_FitsInsideCircularOpeningIncludingLargeQuantities(float size, long amount)
         {
             var canvas = new GameObject("SlotFitTestCanvas", typeof(RectTransform), typeof(Canvas));

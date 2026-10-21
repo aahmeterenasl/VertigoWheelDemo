@@ -669,6 +669,7 @@ MonoBehaviour:
   - {fileID: 2663862574427073364}
   _background: {fileID: 6899017616370689818}
   _currentBackground: {fileID: 7194133524467539596}
+  _currentFrame: {fileID: 6579226882259142566}
   _markerAccent: {fileID: 8647265011624827196}
   _departingNumber: {fileID: 4966588516592581794}
   _numberStrip: {fileID: 986455079260683025}
@@ -831,7 +832,7 @@ MonoBehaviour:
   m_fontSizeBase: 32
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 10
+  m_fontSizeMin: 28
   m_fontSizeMax: 44
   m_fontStyle: 0
   m_HorizontalAlignment: 2

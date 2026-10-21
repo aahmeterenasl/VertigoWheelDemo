@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using TMPro;
@@ -68,12 +67,14 @@ namespace VertigoWheel.Tests.PlayMode
             Set(long.MaxValue);
             _ledger.PlayArrival(_settings);
             yield return new WaitForSecondsRealtime(0.25f);
-            Assert.That(Quantity(), Is.EqualTo(long.MaxValue.ToString("N0", CultureInfo.InvariantCulture)));
+            Assert.That(Quantity(), Is.EqualTo("9.2Qi"));
+            Assert.That(Row().Quantity, Is.EqualTo(long.MaxValue));
             _ledger.StageArrival(RewardId.Cash, 100);
             Set(long.MaxValue);
             _ledger.PlayArrival(_settings);
             _ledger.CompleteFeedback();
-            Assert.That(Quantity(), Is.EqualTo(long.MaxValue.ToString("N0", CultureInfo.InvariantCulture)));
+            Assert.That(Quantity(), Is.EqualTo("9.2Qi"));
+            Assert.That(Row().Quantity, Is.EqualTo(long.MaxValue));
         }
 
         [UnityTest]

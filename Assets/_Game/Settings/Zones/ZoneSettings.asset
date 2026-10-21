@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: VertigoWheel.Settings::VertigoWheel.Settings.ZoneSettings
   _safeZoneInterval: 5
   _superZoneInterval: 30
-  _cashOutPolicy: 0
+  _cashOutPolicy: 1
   _rewardTierInterval: 5
   _maximumRewardQuantity: 1000000000

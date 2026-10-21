@@ -28,6 +28,8 @@ namespace VertigoWheel.Tests.EditMode
         private RectTransform _content;
         private TMP_Text _emptyLabel;
         private WheelSettings _wheelProfile;
+        private GameSettings _boardSettings;
+        private ZoneSettings _boardZones;
         private readonly Dictionary<RewardId, RewardSettings> _catalog = new Dictionary<RewardId, RewardSettings>();
 
         [SetUp]
@@ -92,6 +94,8 @@ namespace VertigoWheel.Tests.EditMode
         public void TearDown()
         {
             Object.DestroyImmediate(_wheelProfile);
+            Object.DestroyImmediate(_boardSettings);
+            Object.DestroyImmediate(_boardZones);
             Object.DestroyImmediate(_canvasRoot);
             Object.DestroyImmediate(_templateRoot);
             foreach (RewardSettings reward in _catalog.Values)
@@ -119,7 +123,7 @@ namespace VertigoWheel.Tests.EditMode
 
             Assert.That(_content.childCount, Is.EqualTo(itemCount));
             Assert.That(_content.GetChild(0).GetInstanceID(), Is.EqualTo(firstItemId));
-            Assert.That(QuantityAt(0), Is.EqualTo("x1,234,567"));
+            Assert.That(QuantityAt(0), Is.EqualTo("x1.2M"));
             Assert.That(_scroll.verticalNormalizedPosition, Is.EqualTo(0.37f).Within(0.001f));
             Assert.That(_emptyLabel.gameObject.activeSelf, Is.False);
         }
@@ -207,6 +211,8 @@ namespace VertigoWheel.Tests.EditMode
         [TestCase(29, "35", "30")]
         [TestCase(5, "10", "30")]
         [TestCase(30, "35", "60")]
+        [TestCase(2147483640, "2147483645", "—")]
+        [TestCase(int.MaxValue, "—", "—")]
         public void BoardRender_UsesPreparedZoneAndBlocksControlsAndMomentumBehindModal(
             int zoneNumber, string nextSafe, string nextSuper)
         {
@@ -214,6 +220,12 @@ namespace VertigoWheel.Tests.EditMode
             GameObject wheelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel.prefab");
             Assert.That(settings, Is.Not.Null);
             Assert.That(wheelPrefab, Is.Not.Null);
+            // Developer Play-mode tuning of the shared asset must not change this test's policy.
+            _boardSettings = Object.Instantiate(settings);
+            _boardZones = Object.Instantiate(settings.ZoneSettings);
+            _boardZones.CashOutPolicy = VertigoWheel.Core.Zones.CashOutPolicy.AnyZone;
+            _boardSettings.ZoneSettings = _boardZones;
+            settings = _boardSettings;
             WheelView wheel = Object.Instantiate(wheelPrefab, _canvasRoot.transform, false).GetComponent<WheelView>();
             GameObject boardObject = Child("ui_board", _canvasRoot.transform);
             CanvasGroup boardGroup = boardObject.AddComponent<CanvasGroup>();

@@ -18,6 +18,7 @@ MonoBehaviour:
   _superCurrentBackgroundSprite: {fileID: 21300000, guid: 2e81f8f39ff690542adadc73b0ff542a, type: 3}
   _currentNumberColor: {r: 0, g: 0, b: 0, a: 1}
   _completedOpacity: 0.35
+  _minimumNumberFontSize: 28
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _safeColor: {r: 0.65, g: 1, b: 0.26, a: 1}
   _superColor: {r: 1, g: 0.78, b: 0.2, a: 1}

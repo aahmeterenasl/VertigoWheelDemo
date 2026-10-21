@@ -78,7 +78,7 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(text.alpha, Is.EqualTo(1f));
             Assert.That(((RectTransform)text.transform).anchoredPosition, Is.EqualTo(Vector2.zero));
             Assert.That(icon.transform.localScale, Is.EqualTo(Vector3.one));
-            Assert.That(Read<TMPro.TMP_Text>(_view, "_quantity").text, Is.EqualTo("x123,456,789"));
+            Assert.That(Read<TMPro.TMP_Text>(_view, "_quantity").text, Is.EqualTo("x123M"));
             Assert.That(Read<TMPro.TMP_Text>(_view, "_name").text, Is.EqualTo(_reward.DisplayName));
             Quaternion rotation = shine.transform.localRotation;
             yield return new WaitForSecondsRealtime(0.08f);

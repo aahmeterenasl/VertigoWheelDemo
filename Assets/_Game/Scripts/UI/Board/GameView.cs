@@ -84,11 +84,21 @@ namespace VertigoWheel.UI.Board
             _zoneTrack.Render(snapshot.ZoneNumber, rules);
             _rewards.SetRewards(snapshot.Rewards, catalog, resetScroll);
             RefreshWheelText();
-            _nextSafeLabel.text = NextSafeZone(snapshot.ZoneNumber, rules);
-            _nextSuperLabel.text = NextMilestone(snapshot.ZoneNumber, rules.SuperZoneInterval);
+            SetMilestoneNumber(_nextSafeLabel, NextSafeZone(snapshot.ZoneNumber, rules));
+            SetMilestoneNumber(_nextSuperLabel, NextMilestone(snapshot.ZoneNumber, rules.SuperZoneInterval));
             _wheel.SetSpinInteractable(snapshot.CanSpin && !modalOpen);
             _exitButton.SetInteractable(snapshot.CanCashOut && !modalOpen);
             SetBoardBlocked(modalOpen);
+        }
+
+        private static void SetMilestoneNumber(TMP_Text label, string value)
+        {
+            label.text = value;
+            // Keep the reference layout for ordinary zones. Large exact numbers can use
+            // the unused symbol area on the right without moving the caption or panel.
+            Vector2 anchorMax = label.rectTransform.anchorMax;
+            anchorMax.x = value.Length > 4 ? .96f : .75f;
+            label.rectTransform.anchorMax = anchorMax;
         }
 
         public void SetStatus(string message)

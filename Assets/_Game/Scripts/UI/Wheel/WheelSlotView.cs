@@ -1,4 +1,4 @@
-using System.Globalization;
+using VertigoWheel.UI.Common;
 using TMPro;
 using UnityEngine;
 
@@ -21,7 +21,7 @@ namespace VertigoWheel.UI.Wheel
             _isBomb = isBomb;
             _icon.sprite = icon;
             _icon.preserveAspect = true;
-            _quantity.text = isBomb ? string.Empty : "x" + FormatQuantity(quantity);
+            _quantity.text = isBomb ? string.Empty : "x" + QuantityFormatter.Format(quantity, true);
             ApplyContentLayout();
         }
 
@@ -60,21 +60,5 @@ namespace VertigoWheel.UI.Wheel
             _quantity.gameObject.SetActive(!_isBomb);
         }
 
-        private static string FormatQuantity(long quantity)
-        {
-            if (quantity < 1000)
-            {
-                return quantity.ToString(CultureInfo.InvariantCulture);
-            }
-            double divisor = quantity < 1000000 ? 1000.0
-                : quantity < 1000000000 ? 1000000.0
-                : quantity < 1000000000000 ? 1000000000.0
-                : quantity < 1000000000000000 ? 1000000000000.0
-                : quantity < 1000000000000000000 ? 1000000000000000.0 : 1000000000000000000.0;
-            string suffix = divisor == 1000 ? "K" : divisor == 1000000 ? "M"
-                : divisor == 1000000000 ? "B" : divisor == 1000000000000 ? "T"
-                : divisor == 1000000000000000 ? "Qa" : "Qi";
-            return (quantity / divisor).ToString("0.#", CultureInfo.InvariantCulture) + suffix;
-        }
     }
 }

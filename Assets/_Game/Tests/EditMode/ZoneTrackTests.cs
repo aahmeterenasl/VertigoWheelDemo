@@ -43,7 +43,6 @@ namespace VertigoWheel.Tests.EditMode
         [TestCase(15)]
         [TestCase(29)]
         [TestCase(30)]
-        [TestCase(int.MaxValue)]
         public void Window_KeepsCurrentCenteredAndHidesOutOfRangeNumbers(int current)
         {
             _view.Render(current, Rules());
@@ -64,6 +63,58 @@ namespace VertigoWheel.Tests.EditMode
             Assert.That(labels.Single(t => t.fontStyle == FontStyles.Bold).text, Is.EqualTo(current.ToString()));
             Assert.That(((RectTransform)items[6].transform).anchorMin.x, Is.EqualTo(6f / 13f).Within(.0001f));
             Assert.That(((RectTransform)items[6].transform).anchorMax.x, Is.EqualTo(7f / 13f).Within(.0001f));
+        }
+
+        [TestCase(999, 960f)]
+        [TestCase(999999, 960f)]
+        [TestCase(2147483640, 960f)]
+        [TestCase(int.MaxValue, 700f)]
+        public void LargeZoneWindow_PreservesExactLabelsAndReadableSize(int current, float width)
+        {
+            ((RectTransform)_view.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+            _view.Render(current, Rules());
+            ZoneItemView[] items = _view.GetComponentsInChildren<ZoneItemView>(true);
+            RectTransform center = (RectTransform)items[6].transform;
+            int count = Mathf.RoundToInt(1f / (center.anchorMax.x - center.anchorMin.x));
+            Assert.That(count % 2, Is.EqualTo(1));
+            Assert.That(center.anchorMin.x + center.anchorMax.x, Is.EqualTo(1f).Within(.001f));
+            if (current > 999) Assert.That(count, Is.LessThan(13));
+            for (int index = 0; index < items.Length; index++)
+            {
+                long zone = (long)current - 6 + index;
+                bool visible = Math.Abs(index - 6) <= count / 2 && zone >= 1 && zone <= int.MaxValue;
+                Assert.That(items[index].gameObject.activeSelf, Is.EqualTo(visible));
+                if (!visible) continue;
+                TMP_Text text = items[index].GetComponentInChildren<TMP_Text>();
+                text.ForceMeshUpdate();
+                Assert.That(text.text, Is.EqualTo(zone.ToString()));
+                Assert.That(text.isTextOverflowing, Is.False, text.text);
+                Assert.That(text.fontSize, Is.GreaterThanOrEqualTo(_settings.MinimumNumberFontSize - .1f));
+            }
+            RectTransform frame = (RectTransform)_view.transform.Find("ui_animation_zone_marker/ui_image_current_frame");
+            Assert.That(frame.anchorMin.x, Is.EqualTo(center.anchorMin.x).Within(.001f));
+            Assert.That(frame.anchorMax.x, Is.EqualTo(center.anchorMax.x).Within(.001f));
+        }
+
+        [Test]
+        public void ResizeAndDigitBoundary_SnapMotionAndReuseItems()
+        {
+            int[] ids = _view.GetComponentsInChildren<ZoneItemView>(true).Select(i => i.GetInstanceID()).ToArray();
+            _view.Render(99999, Rules());
+            _view.Render(100000, Rules());
+            // A changed window cannot slide using the old window's cell width.
+            _view.AnimateAdvance(.2f, 1.05f);
+            ((RectTransform)_view.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 650f);
+            typeof(ZoneTrackView).GetMethod("OnRectTransformDimensionsChange", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(_view, null);
+            Assert.That(_view.AnimateAdvance(.2f, 1.05f), Is.False);
+            Assert.That(_view.GetComponentsInChildren<VertigoWheel.UI.Common.UiMotionView>(true)
+                    .Single(v => v.name == "ui_animation_zone_strip").GetComponent<RectTransform>().anchoredPosition,
+                Is.EqualTo(Vector2.zero));
+            Assert.That(_view.GetComponentsInChildren<ZoneItemView>(true).Select(i => i.GetInstanceID()), Is.EqualTo(ids));
+            ((RectTransform)_view.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 960f);
+            _view.Render(30, Rules());
+            Assert.That(_view.GetComponentsInChildren<ZoneItemView>().Length, Is.EqualTo(13));
         }
 
         [Test]

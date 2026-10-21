@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -73,7 +72,7 @@ namespace VertigoWheel.UI.Dialogs
             _icon.sprite = reward.Icon;
             _icon.preserveAspect = true;
             _name.text = reward.DisplayName;
-            _quantity.text = "x" + quantity.ToString("N0", CultureInfo.InvariantCulture);
+            _quantity.text = "x" + QuantityFormatter.Format(quantity);
             BindEffect(_glow, settings.RewardGlowSprite);
             BindEffect(_shine, settings.RewardShineSprite);
             _actionPending = true;

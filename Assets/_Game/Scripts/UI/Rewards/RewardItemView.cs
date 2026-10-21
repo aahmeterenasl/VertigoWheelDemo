@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using DG.Tweening;
 using VertigoWheel.UI.Common;
 using TMPro;
@@ -76,7 +75,7 @@ namespace VertigoWheel.UI.Rewards
         private void SetQuantity(long quantity)
         {
             if (_quantity != null) _quantity.text = (_showQuantityPrefix ? "x" : string.Empty)
-                + quantity.ToString("N0", CultureInfo.InvariantCulture);
+                + QuantityFormatter.Format(quantity);
         }
 
         private void OnDisable() => FinishFeedback();

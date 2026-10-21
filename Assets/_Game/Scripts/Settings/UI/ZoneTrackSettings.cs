@@ -24,6 +24,19 @@ namespace VertigoWheel.Settings
         [SerializeField, Range(0f, 1f)]
         private float _completedOpacity = 0.35f;
 
+        [SerializeField, Range(18f, 44f), Tooltip("Show fewer neighboring zones rather than shrinking exact zone numbers below this size.")]
+        private float _minimumNumberFontSize = 28f;
+
+        public float MinimumNumberFontSize
+        {
+            get => _minimumNumberFontSize;
+            set
+            {
+                ValidateFontSize(value);
+                _minimumNumberFontSize = value;
+            }
+        }
+
         [SerializeField]
         private Color _normalColor = new Color(0.85f, 0.89f, 0.93f);
 
@@ -119,6 +132,13 @@ namespace VertigoWheel.Settings
             ValidateColor(_superColor);
             ValidateColor(_currentNumberColor);
             ValidateOpacity(_completedOpacity);
+            ValidateFontSize(_minimumNumberFontSize);
+        }
+
+        private static void ValidateFontSize(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < 18f || value > 44f)
+                throw new ArgumentOutOfRangeException(nameof(value), "Zone number minimum size must be between 18 and 44.");
         }
 
         private static void ValidateOpacity(float value)

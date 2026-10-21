@@ -23,6 +23,8 @@ namespace VertigoWheel.UI.Board
         [SerializeField]
         private UnityEngine.UI.Image _currentBackground;
 
+        [SerializeField] private RectTransform _currentFrame;
+
         [SerializeField] private UiMotionView _markerAccent;
         [SerializeField] private TMP_Text _departingNumber;
         [SerializeField] private UiMotionView _numberStrip;
@@ -33,12 +35,16 @@ namespace VertigoWheel.UI.Board
         private int _lastSuperInterval;
         private bool _canAnimateAdvance;
         private ZoneType _currentType;
+        private int _visibleCount;
+        private float _layoutWidth;
+        private float _minimumNumberFontSize;
+        private ZoneRules _lastRules;
 
         public bool AnimateAdvance(float duration, float accentScale)
         {
             if (!_canAnimateAdvance) return false;
             _canAnimateAdvance = false;
-            float spacing = ((RectTransform)transform).rect.width / _items.Length;
+            float spacing = ((RectTransform)transform).rect.width / _visibleCount;
             _numberStrip?.Slide(duration, spacing);
             if (_departingNumber != null && _departingZone >= 1)
             {
@@ -90,16 +96,27 @@ namespace VertigoWheel.UI.Board
                     throw new InvalidOperationException("The zone track contains a missing item.");
                 }
             }
+            CaptureStyle();
+            float width = ((RectTransform)transform).rect.width;
+            int digits = Math.Min(int.MaxValue, (long)currentZone + _items.Length / 2)
+                .ToString(CultureInfo.InvariantCulture).Length;
+            float minimumWidth = _items[_items.Length / 2].MeasureMinimumWidth(digits, _minimumNumberFontSize);
+            int visibleCount = Mathf.Clamp(Mathf.FloorToInt(width / minimumWidth), 1, _items.Length);
+            if (visibleCount % 2 == 0) visibleCount--;
+            bool layoutChanged = visibleCount != _visibleCount || Mathf.Abs(width - _layoutWidth) > .1f;
             bool changed = currentZone != _lastZone || rules.SafeZoneInterval != _lastSafeInterval
                 || rules.SuperZoneInterval != _lastSuperInterval;
-            if (changed)
+            if (changed || layoutChanged)
             {
                 CompleteMotion();
-                _departingZone = (long)_lastZone - _items.Length / 2;
-                _canAnimateAdvance = _lastZone > 0 && (long)currentZone == (long)_lastZone + 1
+                _departingZone = (long)_lastZone - _visibleCount / 2;
+                _canAnimateAdvance = !layoutChanged && _lastZone > 0 && (long)currentZone == (long)_lastZone + 1
                     && rules.SafeZoneInterval == _lastSafeInterval && rules.SuperZoneInterval == _lastSuperInterval;
             }
-            CaptureStyle();
+            _visibleCount = visibleCount;
+            _layoutWidth = width;
+            _lastRules = rules;
+            ApplyWindowLayout();
             if (_canAnimateAdvance && _departingZone >= 1)
             {
                 ZoneType type = rules.GetZoneType((int)_departingZone);
@@ -119,7 +136,8 @@ namespace VertigoWheel.UI.Board
             for (int index = 0; index < _items.Length; index++)
             {
                 long candidate = first + index;
-                bool visible = candidate >= 1 && candidate <= int.MaxValue;
+                bool visible = Math.Abs(index - _items.Length / 2) <= _visibleCount / 2
+                    && candidate >= 1 && candidate <= int.MaxValue;
                 _items[index].gameObject.SetActive(visible);
                 if (!visible)
                 {
@@ -139,6 +157,36 @@ namespace VertigoWheel.UI.Board
                 }
                 _items[index].Bind(zone, isCurrent, color);
             }
+        }
+
+        private void OnRectTransformDimensionsChange()
+        {
+            if (_lastRules != null && Mathf.Abs(((RectTransform)transform).rect.width - _layoutWidth) > .1f)
+                Render(_lastZone, _lastRules);
+        }
+
+        private void ApplyWindowLayout()
+        {
+            for (int index = 0; index < _items.Length; index++)
+            {
+                float left = (float)(index - _items.Length / 2 + _visibleCount / 2) / _visibleCount;
+                SetHorizontalAnchors((RectTransform)_items[index].transform, left, left + 1f / _visibleCount);
+                _items[index].SetMinimumFontSize(_minimumNumberFontSize);
+            }
+            float markerLeft = .5f - .5f / _visibleCount;
+            SetHorizontalAnchors(_currentBackground.rectTransform, markerLeft, 1f - markerLeft);
+            if (_currentFrame != null) SetHorizontalAnchors(_currentFrame, markerLeft, 1f - markerLeft);
+            if (_departingNumber != null)
+            {
+                SetHorizontalAnchors((RectTransform)_departingNumber.transform.parent, -1f / _visibleCount, 0f);
+                _departingNumber.fontSizeMin = _minimumNumberFontSize;
+            }
+        }
+
+        private static void SetHorizontalAnchors(RectTransform rect, float left, float right)
+        {
+            rect.anchorMin = new Vector2(left, rect.anchorMin.y);
+            rect.anchorMax = new Vector2(right, rect.anchorMax.y);
         }
 
         private void CaptureStyle()
@@ -164,6 +212,7 @@ namespace VertigoWheel.UI.Board
             _superCurrentBackgroundSprite = _settings.SuperCurrentBackgroundSprite;
             _currentNumberColor = _settings.CurrentNumberColor;
             _completedOpacity = _settings.CompletedOpacity;
+            _minimumNumberFontSize = _settings.MinimumNumberFontSize;
             _normalColor = _settings.NormalColor;
             _safeColor = _settings.SafeColor;
             _superColor = _settings.SuperColor;
