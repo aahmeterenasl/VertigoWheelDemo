@@ -63,6 +63,7 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.AnimationSettings.SpinDurationSeconds = 2f;
             _settings.AnimationSettings.FullTurns = 1;
             _settings.AnimationSettings.DialogDurationSeconds = 0f;
+            _settings.AnimationSettings.SummaryEntranceSeconds = 0f;
             _settings.AnimationSettings.BombEntranceSeconds = 0f;
             _settings.AnimationSettings.ExitOpenSeconds = 0f;
             _settings.AnimationSettings.ExitCloseSeconds = 0f;
@@ -675,6 +676,45 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_summary.gameObject.activeSelf, Is.False);
             ClickSpin();
             Assert.That(_run.PendingSpin, Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator SummaryEntrance_GatesRestart_UsesAcceptedTiming_AndResumeCannotGrantAgain()
+        {
+            SettleRewardAndContinue();
+            _settings.AnimationSettings.SummaryEntranceSeconds = .10f;
+            ClickBoardExit(); ClickAction(_exit, "Collect Rewards");
+            RunSummary collected = _run.Summary;
+            long generation = _run.RunGeneration;
+            _settings.AnimationSettings.SummaryEntranceSeconds = 60f;
+            Assert.That(_summary.IsReady, Is.False);
+            ClickAction(_summary); ClickSpin(); ClickBoardExit();
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation));
+            Time.timeScale = 0f;
+            yield return new WaitForSecondsRealtime(.18f);
+            Assert.That(_summary.IsReady, Is.True);
+            _controller.Resume(); _controller.Resume();
+            Assert.That(_run.Summary, Is.SameAs(collected));
+            Assert.That(_run.State, Is.EqualTo(RunState.CashedOut));
+            ClickAction(_summary); ClickAction(_summary);
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation + 1));
+            Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+            Time.timeScale = 1f;
+        }
+
+        [UnityTest]
+        public IEnumerator SummaryResume_CompletesEntranceWithoutReplacingTheCollectedResult()
+        {
+            SettleRewardAndContinue();
+            _settings.AnimationSettings.SummaryEntranceSeconds = 1f;
+            ClickBoardExit(); ClickAction(_exit, "Collect Rewards");
+            RunSummary collected = _run.Summary;
+            Assert.That(_summary.IsReady, Is.False);
+            _controller.Resume(); _controller.Resume();
+            Assert.That(_summary.IsReady, Is.True);
+            Assert.That(_run.Summary, Is.SameAs(collected));
+            yield return new WaitForSecondsRealtime(.1f);
+            Assert.That(_run.Summary, Is.SameAs(collected));
         }
 
         [UnityTest]

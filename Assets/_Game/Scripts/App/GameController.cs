@@ -93,6 +93,11 @@ namespace VertigoWheel.App
         /// <summary>Completes an accepted spin through its original once-only settlement path after app suspension.</summary>
         public void Resume()
         {
+            if (!_disposed && _modal == ActiveModal.Summary)
+            {
+                _cashOutSummary.CompleteEntrance();
+                return;
+            }
             if (!_disposed && _modal == ActiveModal.Bomb)
             {
                 _bombResult.CompleteEntrance();
@@ -551,6 +556,9 @@ namespace VertigoWheel.App
             _uiAnimation.ClockwiseSpin = source.ClockwiseSpin;
             _uiAnimation.SpinEase = source.SpinEase;
             _uiAnimation.DialogDurationSeconds = source.DialogDurationSeconds;
+            _uiAnimation.SummaryEntranceSeconds = source.SummaryEntranceSeconds;
+            _uiAnimation.SummaryStaggerSeconds = source.SummaryStaggerSeconds;
+            _uiAnimation.SummaryCardLift = source.SummaryCardLift;
             _uiAnimation.BombEntranceSeconds = source.BombEntranceSeconds;
             _uiAnimation.BombStartScale = source.BombStartScale;
             _uiAnimation.BombHaloScale = source.BombHaloScale;

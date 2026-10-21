@@ -88,6 +88,21 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
         }
 
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        public void InvalidSummaryDurations_RejectSetterAndInspectorPaths(float duration)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.SummaryEntranceSeconds = duration);
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.SummaryStaggerSeconds = duration);
+            using (var data = new SerializedObject(_settings))
+            {
+                data.FindProperty("_summaryEntranceSeconds").floatValue = duration;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
+        }
+
         [Test]
         public void DialogDurations_SupportImmediateAndAnimatedReveals()
         {

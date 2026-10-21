@@ -24,6 +24,10 @@ namespace VertigoWheel.UI.Dialogs
         [SerializeField]
         private ActionButtonView _restartButton;
 
+        [SerializeField] private UiMotionView _titleMotion;
+        [SerializeField] private UiMotionView _actionMotion;
+        private RunSummary _shownSummary;
+
         private bool _actionPending = true;
         private ActionButtonView _listenedRestartButton;
 
@@ -38,20 +42,47 @@ namespace VertigoWheel.UI.Dialogs
                 throw new ArgumentNullException("A cash-out summary, reward catalog, and animation settings are required.");
             }
             settings.Validate();
+            // Settings refreshes must not restart an entrance or interrupt inspection of the same result.
+            if (_dialog.IsOpen && ReferenceEquals(_shownSummary, summary)) return;
+            CompleteVisuals();
             _title.text = "YOU GOT:";
-            _rewards.SetRewards(summary.Rewards, catalog, !_dialog.IsOpen);
+            _rewards.SetRewards(summary.Rewards, catalog, true);
+            _shownSummary = summary;
             _rewards.SetInteractionEnabled(false);
             _actionPending = true;
             _restartButton.SetInteractable(true);
-            _dialog.Show(settings.DialogDurationSeconds, () =>
+            float duration = summary.Rewards.Count == 0 ? 0f : settings.SummaryEntranceSeconds;
+            _dialog.Show(duration, () =>
             {
+                CompleteVisuals();
                 _actionPending = false;
                 _rewards.SetInteractionEnabled(true);
-            });
+            }, keepBackdropVisible: true);
+            if (duration > 0f)
+            {
+                _titleMotion?.Reveal(duration * 0.45f, 0f, 8f, 1f);
+                _actionMotion?.Reveal(duration * 0.4f, duration * 0.5f, 8f, 1f);
+                _rewards.RevealVisible(settings);
+            }
+        }
+
+        public void CompleteEntrance()
+        {
+            CompleteVisuals();
+            _dialog.CompleteOpening();
+        }
+
+        private void CompleteVisuals()
+        {
+            _titleMotion?.Complete();
+            _actionMotion?.Complete();
+            _rewards?.CompleteFeedback();
         }
 
         public void Hide()
         {
+            CompleteVisuals();
+            _shownSummary = null;
             _actionPending = true;
             _rewards.SetInteractionEnabled(false);
             _dialog.Hide();
@@ -87,6 +118,8 @@ namespace VertigoWheel.UI.Dialogs
 
         private void OnDisable()
         {
+            CompleteVisuals();
+            _shownSummary = null;
             if (_rewards != null)
             {
                 _rewards.SetInteractionEnabled(false);

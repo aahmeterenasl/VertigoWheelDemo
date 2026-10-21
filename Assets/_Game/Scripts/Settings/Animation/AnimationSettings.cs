@@ -92,6 +92,29 @@ namespace VertigoWheel.Settings
         [SerializeField, Range(0.9f, 1f)] private float _bombStartScale = 0.96f;
         [SerializeField, Range(1f, 1.1f)] private float _bombHaloScale = 1.05f;
 
+        [Header("Cash-out summary")]
+        [SerializeField, Min(0f)] private float _summaryEntranceSeconds = 0.40f;
+        [SerializeField, Min(0f)] private float _summaryStaggerSeconds = 0.035f;
+        [SerializeField, Range(0f, 30f)] private float _summaryCardLift = 14f;
+
+        public float SummaryEntranceSeconds
+        {
+            get => _summaryEntranceSeconds;
+            set { ValidateOptionalDuration(value); _summaryEntranceSeconds = value; }
+        }
+
+        public float SummaryStaggerSeconds
+        {
+            get => _summaryStaggerSeconds;
+            set { ValidateOptionalDuration(value); _summaryStaggerSeconds = value; }
+        }
+
+        public float SummaryCardLift
+        {
+            get => _summaryCardLift;
+            set { ValidateRange(value, 0f, 30f); _summaryCardLift = value; }
+        }
+
         public float BombEntranceSeconds
         {
             get => _bombEntranceSeconds;
@@ -351,6 +374,9 @@ namespace VertigoWheel.Settings
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
+            ValidateOptionalDuration(_summaryEntranceSeconds);
+            ValidateOptionalDuration(_summaryStaggerSeconds);
+            ValidateRange(_summaryCardLift, 0f, 30f);
             ValidateOptionalDuration(_bombEntranceSeconds);
             ValidateRange(_bombStartScale, 0.9f, 1f);
             ValidateRange(_bombHaloScale, 1f, 1.1f);

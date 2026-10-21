@@ -44,3 +44,6 @@ MonoBehaviour:
   _bombEntranceSeconds: 0.32
   _bombStartScale: 0.96
   _bombHaloScale: 1.05
+  _summaryEntranceSeconds: 0.4
+  _summaryStaggerSeconds: 0.035
+  _summaryCardLift: 14

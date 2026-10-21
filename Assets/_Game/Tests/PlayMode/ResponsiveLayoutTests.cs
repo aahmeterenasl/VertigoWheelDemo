@@ -61,6 +61,7 @@ namespace VertigoWheel.Tests.PlayMode
             }
             _animation = ScriptableObject.CreateInstance<AnimationSettings>();
             _animation.DialogDurationSeconds = 0;
+            _animation.SummaryEntranceSeconds = 0;
             yield return null;
         }
 

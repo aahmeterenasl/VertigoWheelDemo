@@ -28,7 +28,7 @@ namespace VertigoWheel.UI.Dialogs
         public bool IsReady => _isReady;
         public bool IsClosing => _closing;
 
-        public void Show(float duration, Action shown = null)
+        public void Show(float duration, Action shown = null, bool keepBackdropVisible = false)
         {
             if (float.IsNaN(duration) || float.IsInfinity(duration) || duration < 0f)
             {
@@ -49,8 +49,8 @@ namespace VertigoWheel.UI.Dialogs
             // An optional backdrop lets a specialized view stage its own foreground.
             CanvasGroup fadingGroup = _backdrop != null ? _backdrop : _group;
             _group.alpha = 1f;
-            fadingGroup.alpha = duration == 0f ? 1f : 0f;
-            _content.localScale = duration == 0f || _backdrop != null ? Vector3.one : Vector3.one * 0.92f;
+            fadingGroup.alpha = duration == 0f || keepBackdropVisible ? 1f : 0f;
+            _content.localScale = duration == 0f || keepBackdropVisible || _backdrop != null ? Vector3.one : Vector3.one * 0.92f;
             if (duration == 0f)
             {
                 FinishOpening(version);
@@ -58,7 +58,11 @@ namespace VertigoWheel.UI.Dialogs
             }
 
             Sequence opening = DOTween.Sequence();
-            if (_backdrop != null)
+            if (keepBackdropVisible)
+            {
+                opening.AppendInterval(duration);
+            }
+            else if (_backdrop != null)
             {
                 opening.Append(DOTween.To(() => fadingGroup.alpha, value => fadingGroup.alpha = value, 1f, duration * 0.5f));
                 opening.AppendInterval(duration * 0.5f);

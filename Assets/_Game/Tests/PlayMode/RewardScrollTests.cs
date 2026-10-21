@@ -201,7 +201,7 @@ namespace VertigoWheel.Tests.PlayMode
             CashOutSummaryView summary = _scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<CashOutSummaryView>(true)).Single();
             AnimationSettings animation = ScriptableObject.CreateInstance<AnimationSettings>();
-            animation.DialogDurationSeconds = 0.05f;
+            animation.SummaryEntranceSeconds = 0.05f;
             RewardId[] ids = _catalog.Keys.ToArray();
             RunSummary collected = CreateSummary(ids, ids.Length);
             try
@@ -243,7 +243,7 @@ namespace VertigoWheel.Tests.PlayMode
                 summary.Hide();
                 Assert.That(scroll.enabled, Is.False);
                 Assert.That(scroll.velocity, Is.EqualTo(Vector2.zero));
-                animation.DialogDurationSeconds = 0;
+                animation.SummaryEntranceSeconds = 0;
                 summary.Show(CreateSummary(ids, 2), _catalog, animation);
                 yield return null;
                 Canvas.ForceUpdateCanvases();
@@ -266,6 +266,55 @@ namespace VertigoWheel.Tests.PlayMode
                 summary.Hide();
                 Object.Destroy(animation);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator SummaryEntrance_IsOpaqueAndBounded_AndReusedCardsCannotKeepStaleMotion()
+        {
+            var summary = _scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<CashOutSummaryView>(true)).Single();
+            var animation = ScriptableObject.CreateInstance<AnimationSettings>();
+            animation.SummaryEntranceSeconds = 1f;
+            animation.SummaryStaggerSeconds = 60f;
+            var collected = CreateSummary(_catalog.Keys.ToArray(), _catalog.Count);
+            try
+            {
+                summary.Show(collected, _catalog, animation);
+                var group = summary.GetComponent<CanvasGroup>();
+                var scroll = summary.GetComponentInChildren<RewardCollectionView>().GetComponent<UnityEngine.UI.ScrollRect>();
+                var cards = scroll.content.GetComponentsInChildren<RewardItemView>();
+                var moving = cards.Where(c => c.Motion.GetComponent<CanvasGroup>().alpha < 1f).ToArray();
+                Assert.That(group.alpha, Is.EqualTo(1f), "The opaque background must be present from the first frame.");
+                Assert.That(summary.GetComponent<UnityEngine.UI.Image>().color.a, Is.EqualTo(1f));
+                Assert.That(moving.Length, Is.InRange(1, 6));
+                Assert.That(cards.Last().Motion.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f),
+                    "Offscreen pooled cards should already be settled.");
+                Assert.That(scroll.enabled, Is.False);
+                summary.Show(collected, _catalog, animation);
+                Assert.That(summary.IsReady, Is.False);
+                summary.CompleteEntrance();
+                Assert.That(summary.IsReady, Is.True);
+                Assert.That(scroll.enabled, Is.True);
+                Assert.That(cards.All(c => c.Motion.GetComponent<CanvasGroup>().alpha == 1f), Is.True);
+                Assert.That(cards.All(c => ((RectTransform)c.Motion.transform).anchoredPosition == Vector2.zero), Is.True);
+                scroll.horizontalNormalizedPosition = .7f;
+                summary.Show(collected, _catalog, animation);
+                Assert.That(summary.IsReady, Is.True, "A refresh must not replay an open summary.");
+                Assert.That(scroll.horizontalNormalizedPosition, Is.EqualTo(.7f).Within(.001f));
+                summary.Hide();
+                summary.Show(CreateSummary(_catalog.Keys.ToArray(), 2), _catalog, animation);
+                summary.Hide();
+                animation.SummaryEntranceSeconds = 0f;
+                summary.Show(CreateSummary(_catalog.Keys.ToArray(), 2), _catalog, animation);
+                yield return new WaitForSecondsRealtime(.1f);
+                Assert.That(summary.IsReady, Is.True);
+                Assert.That(cards.All(c => c.Motion.GetComponent<CanvasGroup>().alpha == 1f), Is.True);
+                summary.Hide();
+                animation.SummaryEntranceSeconds = 60f;
+                summary.Show(CreateSummary(_catalog.Keys.ToArray(), 0), _catalog, animation);
+                Assert.That(summary.IsReady, Is.True, "An empty cash-out should not wait for nonexistent cards.");
+            }
+            finally { summary.Hide(); Object.Destroy(animation); }
         }
 
         [UnityTest]

@@ -61,6 +61,25 @@ namespace VertigoWheel.UI.Rewards
             _arrivalAccent?.Complete();
         }
 
+        /// <summary>Stages only the initial viewport; pooled offscreen cards stay in their final state.</summary>
+        public void RevealVisible(AnimationSettings settings)
+        {
+            CompleteFeedback();
+            float duration = settings.SummaryEntranceSeconds;
+            if (duration <= 0f) return;
+            Canvas.ForceUpdateCanvases();
+            int visible = 0;
+            foreach (RewardItemView item in _items)
+            {
+                if (item == null || !item.gameObject.activeInHierarchy || item.Motion == null
+                    || !IsVisible((RectTransform)item.transform)) continue;
+                if (visible == 6) break;
+                float delay = Mathf.Min(visible * settings.SummaryStaggerSeconds, duration * 0.45f);
+                item.Motion.Reveal(duration * 0.5f, delay, settings.SummaryCardLift, 1f);
+                visible++;
+            }
+        }
+
         private bool IsVisible(RectTransform target)
         {
             if (target == null || _scrollRect == null || _scrollRect.viewport == null) return false;
