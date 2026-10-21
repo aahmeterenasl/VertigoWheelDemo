@@ -22,6 +22,11 @@ namespace VertigoWheel.UI.Dialogs
         [SerializeField]
         private ActionButtonView _restartButton;
 
+        [SerializeField] private UiMotionView _impact;
+        [SerializeField] private UiMotionView _halo;
+        [SerializeField] private UiMotionView _text;
+        [SerializeField] private UiMotionView _actions;
+
         private bool _actionPending = true;
         private ActionButtonView _listenedRestartButton;
 
@@ -42,16 +47,36 @@ namespace VertigoWheel.UI.Dialogs
             _rewards.SetInteractionEnabled(false);
             _actionPending = true;
             _restartButton.SetInteractable(true);
-            _dialog.Show(settings.DialogDurationSeconds, () =>
+            float duration = settings.BombEntranceSeconds;
+            _dialog.Show(duration, () =>
             {
                 _actionPending = false;
                 _rewards.SetInteractionEnabled(true);
             });
+            _impact?.Reveal(duration * 0.8f, 0f, 0f, settings.BombStartScale);
+            _halo?.Pulse(duration * 0.375f, settings.BombHaloScale);
+            _text?.Reveal(duration * 0.55f, duration * 0.1f, 8f, 1f);
+            _actions?.Reveal(duration * 0.45f, duration * 0.5f, 8f, 1f);
+        }
+
+        public void CompleteEntrance()
+        {
+            ResetMotion();
+            _dialog.CompleteOpening();
+        }
+
+        private void ResetMotion()
+        {
+            _impact?.Complete();
+            _halo?.Complete();
+            _text?.Complete();
+            _actions?.Complete();
         }
 
         public void Hide()
         {
             _actionPending = true;
+            ResetMotion();
             _rewards.SetInteractionEnabled(false);
             _dialog.Hide();
         }
@@ -64,7 +89,7 @@ namespace VertigoWheel.UI.Dialogs
         {
             if (_restartButton == null)
             {
-                _restartButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_restart")
+                _restartButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_animation_bomb_actions/ui_button_restart")
                     ?.GetComponent<ActionButtonView>();
             }
         }
@@ -86,6 +111,7 @@ namespace VertigoWheel.UI.Dialogs
 
         private void OnDisable()
         {
+            ResetMotion();
             if (_rewards != null)
             {
                 _rewards.SetInteractionEnabled(false);

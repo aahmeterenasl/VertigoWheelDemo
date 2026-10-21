@@ -41,3 +41,6 @@ MonoBehaviour:
   _exitOpenSeconds: 0.28
   _exitCloseSeconds: 0.12
   _exitStartScale: 0.97
+  _bombEntranceSeconds: 0.32
+  _bombStartScale: 0.96
+  _bombHaloScale: 1.05

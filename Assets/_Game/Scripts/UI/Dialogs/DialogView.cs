@@ -103,6 +103,14 @@ namespace VertigoWheel.UI.Dialogs
                 .OnComplete(() => FinishClose(version));
         }
 
+        public void CompleteOpening()
+        {
+            if (!_isOpen || _closing || _isReady) return;
+            _openingTween?.Kill(false);
+            _openingTween = null;
+            FinishOpening(_showVersion);
+        }
+
         public void CompleteClose()
         {
             if (_closing) FinishClose(_showVersion);

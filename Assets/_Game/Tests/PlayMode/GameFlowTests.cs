@@ -63,6 +63,7 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.AnimationSettings.SpinDurationSeconds = 2f;
             _settings.AnimationSettings.FullTurns = 1;
             _settings.AnimationSettings.DialogDurationSeconds = 0f;
+            _settings.AnimationSettings.BombEntranceSeconds = 0f;
             _settings.AnimationSettings.ExitOpenSeconds = 0f;
             _settings.AnimationSettings.ExitCloseSeconds = 0f;
             _settings.AnimationSettings.ZoneTransitionSeconds = 0f;
@@ -674,6 +675,56 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_summary.gameObject.activeSelf, Is.False);
             ClickSpin();
             Assert.That(_run.PendingSpin, Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator BombEntrance_UsesAcceptedTiming_AndGatesRestartAndScrolling()
+        {
+            SettleRewardAndContinue();
+            RewardAmount earned = _run.CreateSnapshot().Rewards[0];
+            _settings.AnimationSettings.BombEntranceSeconds = 0.10f;
+            _landingRandom.Sample = SampleFor(_run.Wheel, SlotOutcomeKind.Bomb);
+            ClickSpin();
+            _settings.AnimationSettings.BombEntranceSeconds = 60f;
+            _controller.Resume();
+            long generation = _run.RunGeneration;
+            var list = _bomb.GetComponentInChildren<RewardCollectionView>();
+            var scroll = list.GetComponent<UnityEngine.UI.ScrollRect>();
+            Assert.That(_run.State, Is.EqualTo(RunState.Failed));
+            Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+            Assert.That(_bomb.IsReady, Is.False);
+            Assert.That(scroll.enabled, Is.False);
+            ClickAction(_bomb); ClickSpin(); ClickBoardExit();
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation));
+            Time.timeScale = 0f;
+            yield return new WaitForSecondsRealtime(0.18f);
+            Assert.That(_bomb.IsReady, Is.True);
+            Assert.That(scroll.enabled, Is.True);
+            Assert.That(list.GetComponentInChildren<RewardItemView>().Quantity, Is.EqualTo(earned.Quantity));
+            _settings.AnimationSettings.BombEntranceSeconds = 0f;
+            ClickAction(_bomb); ClickAction(_bomb);
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation + 1));
+            Assert.That(_run.State, Is.EqualTo(RunState.Ready));
+            Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+            Time.timeScale = 1f;
+        }
+
+        [UnityTest]
+        public IEnumerator BombResume_CompletesOnlyCosmetics_AndCannotRefundTheLoss()
+        {
+            SettleRewardAndContinue();
+            _settings.AnimationSettings.BombEntranceSeconds = 1f;
+            _landingRandom.Sample = SampleFor(_run.Wheel, SlotOutcomeKind.Bomb);
+            ClickSpin(); _controller.Resume();
+            Assert.That(_bomb.IsReady, Is.False);
+            long generation = _run.RunGeneration;
+            _controller.Resume(); _controller.Resume();
+            Assert.That(_bomb.IsReady, Is.True);
+            Assert.That(_run.State, Is.EqualTo(RunState.Failed));
+            Assert.That(_run.CreateSnapshot().Rewards, Is.Empty);
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation));
+            yield return new WaitForSecondsRealtime(0.1f);
+            Assert.That(_bomb.GetComponentsInChildren<UiMotionView>().All(m => m.transform.localScale == Vector3.one), Is.True);
         }
 
         private SpinTicket StartRewardSpin()

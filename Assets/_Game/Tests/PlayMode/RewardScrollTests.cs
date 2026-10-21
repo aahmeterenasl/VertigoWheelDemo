@@ -131,6 +131,7 @@ namespace VertigoWheel.Tests.PlayMode
             var bomb = _scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BombResultView>(true)).Single();
             var animation = ScriptableObject.CreateInstance<AnimationSettings>();
             animation.DialogDurationSeconds = 0;
+            animation.BombEntranceSeconds = 0;
             try
             {
                 _board.SetBoardBlocked(true);
@@ -160,6 +161,38 @@ namespace VertigoWheel.Tests.PlayMode
                 bomb.Hide();
                 Object.Destroy(animation);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator BombEntrance_HideReopenAndResize_RestoreTheAuthoredVisuals()
+        {
+            var bomb = _scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BombResultView>(true)).Single();
+            var animation = ScriptableObject.CreateInstance<AnimationSettings>();
+            animation.BombEntranceSeconds = 0.08f;
+            try
+            {
+                var motions = bomb.GetComponentsInChildren<UiMotionView>(true);
+                var root = (RectTransform)bomb.transform;
+                Vector2 size = root.sizeDelta;
+                bomb.Show(_icon, _catalog.Keys.Take(2).Select(id => new RewardAmount(id, 10)).ToArray(), _catalog, animation);
+                root.sizeDelta += Vector2.right * 24f;
+                yield return new WaitForSecondsRealtime(0.15f);
+                Assert.That(bomb.IsReady, Is.True);
+                Assert.That(motions.All(m => m.transform.localScale == Vector3.one), Is.True);
+                root.sizeDelta = size;
+                var tint = bomb.transform.Find("ui_image_bomb_backdrop").GetComponent<UnityEngine.UI.Image>().color;
+                Assert.That(tint.a, Is.GreaterThan(0f).And.LessThan(1f));
+                animation.BombEntranceSeconds = 0.15f;
+                bomb.Show(_icon, Array.Empty<RewardAmount>(), _catalog, animation);
+                bomb.Hide();
+                Assert.That(motions.All(m => m.transform.localScale == Vector3.one), Is.True);
+                animation.BombEntranceSeconds = 0f;
+                bomb.Show(_icon, Array.Empty<RewardAmount>(), _catalog, animation);
+                yield return new WaitForSecondsRealtime(0.2f);
+                Assert.That(bomb.IsReady, Is.True);
+                Assert.That(bomb.GetComponentsInChildren<RewardItemView>().Length, Is.Zero);
+            }
+            finally { bomb.Hide(); Object.Destroy(animation); }
         }
 
         [UnityTest]

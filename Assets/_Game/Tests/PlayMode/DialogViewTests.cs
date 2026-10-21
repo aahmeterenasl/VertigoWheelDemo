@@ -151,6 +151,23 @@ namespace VertigoWheel.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator CompleteOpening_FinishesOnce_AndDoesNotCompleteClosing()
+        {
+            int callbacks = 0;
+            _dialog.Show(1f, () => callbacks++);
+            _dialog.CompleteOpening(); _dialog.CompleteOpening();
+            Assert.That(_dialog.IsReady, Is.True);
+            Assert.That(callbacks, Is.EqualTo(1));
+            _dialog.Close(0.05f, () => callbacks++);
+            _dialog.CompleteOpening();
+            Assert.That(_dialog.IsClosing, Is.True);
+            Assert.That(callbacks, Is.EqualTo(1));
+            _dialog.Hide();
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(callbacks, Is.EqualTo(1));
+        }
+
+        [UnityTest]
         public IEnumerator DisableWhileOpening_DropsTheCallbackAndReleasesInput()
         {
             int completions = 0;
