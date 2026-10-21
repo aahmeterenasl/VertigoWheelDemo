@@ -103,6 +103,35 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
         }
 
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        public void InvalidButtonDurations_RejectSetterAndInspectorPaths(float duration)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.ButtonPressSeconds = duration);
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.ButtonReleaseSeconds = duration);
+            using (var data = new SerializedObject(_settings))
+            {
+                data.FindProperty("_buttonPressSeconds").floatValue = duration;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
+        }
+
+        [TestCase(.89f)]
+        [TestCase(1.01f)]
+        [TestCase(float.NaN)]
+        public void InvalidButtonScale_RejectsSetterAndInspectorPaths(float scale)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.ButtonPressedScale = scale);
+            using (var data = new SerializedObject(_settings))
+            {
+                data.FindProperty("_buttonPressedScale").floatValue = scale;
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
+        }
+
         [Test]
         public void DialogDurations_SupportImmediateAndAnimatedReveals()
         {

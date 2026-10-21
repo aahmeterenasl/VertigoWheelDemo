@@ -25,9 +25,9 @@ MonoBehaviour:
   _rewardGlowSprite: {fileID: 21300000, guid: 098fdd5016debf64286e3cd573e244ac, type: 3}
   _rewardShineSprite: {fileID: 21300000, guid: ce9ea7ee4d1f56843a9c0f8a0ee3c60e, type: 3}
   _rewardFlightEnabled: 1
-  _rewardFlightDurationSeconds: 0.35
-  _rewardFlightStaggerSeconds: 0.035
-  _rewardFlightFadeDurationSeconds: 0.14
+  _rewardFlightDurationSeconds: 0.18
+  _rewardFlightStaggerSeconds: 0.015
+  _rewardFlightFadeDurationSeconds: 0.08
   _rewardFlightArcHeight: 40
   _rewardFlightStartScale: 0.4
   _wheelFeedbackEnabled: 1
@@ -35,8 +35,8 @@ MonoBehaviour:
   _pointerTickDurationSeconds: 0.08
   _ledgerDurationSeconds: 0.24
   _ledgerPulseScale: 1.06
-  _zoneTransitionSeconds: 0.26
-  _wheelCrossfadeSeconds: 0.2
+  _zoneTransitionSeconds: 0.2
+  _wheelCrossfadeSeconds: 0.16
   _milestonePulseScale: 1.04
   _exitOpenSeconds: 0.28
   _exitCloseSeconds: 0.12
@@ -47,3 +47,6 @@ MonoBehaviour:
   _summaryEntranceSeconds: 0.4
   _summaryStaggerSeconds: 0.035
   _summaryCardLift: 14
+  _buttonPressSeconds: 0.06
+  _buttonReleaseSeconds: 0.1
+  _buttonPressedScale: 0.96

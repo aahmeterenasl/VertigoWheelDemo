@@ -49,13 +49,13 @@ namespace VertigoWheel.Settings
         private bool _rewardFlightEnabled = true;
 
         [SerializeField, Min(0f)]
-        private float _rewardFlightDurationSeconds = 0.35f;
+        private float _rewardFlightDurationSeconds = 0.18f;
 
         [SerializeField, Min(0f)]
-        private float _rewardFlightStaggerSeconds = 0.035f;
+        private float _rewardFlightStaggerSeconds = 0.015f;
 
         [SerializeField, Min(0f)]
-        private float _rewardFlightFadeDurationSeconds = 0.14f;
+        private float _rewardFlightFadeDurationSeconds = 0.08f;
 
         [SerializeField, Range(0f, 200f)]
         private float _rewardFlightArcHeight = 40f;
@@ -78,8 +78,8 @@ namespace VertigoWheel.Settings
         [SerializeField, Range(1f, 1.1f)] private float _ledgerPulseScale = 1.06f;
 
         [Header("Zone transition")]
-        [SerializeField, Min(0f)] private float _zoneTransitionSeconds = 0.26f;
-        [SerializeField, Min(0f)] private float _wheelCrossfadeSeconds = 0.20f;
+        [SerializeField, Min(0f)] private float _zoneTransitionSeconds = 0.20f;
+        [SerializeField, Min(0f)] private float _wheelCrossfadeSeconds = 0.16f;
         [SerializeField, Range(1f, 1.1f)] private float _milestonePulseScale = 1.04f;
 
         [Header("Exit confirmation")]
@@ -96,6 +96,29 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0f)] private float _summaryEntranceSeconds = 0.40f;
         [SerializeField, Min(0f)] private float _summaryStaggerSeconds = 0.035f;
         [SerializeField, Range(0f, 30f)] private float _summaryCardLift = 14f;
+
+        [Header("Button feedback")]
+        [SerializeField, Min(0f)] private float _buttonPressSeconds = 0.06f;
+        [SerializeField, Min(0f)] private float _buttonReleaseSeconds = 0.10f;
+        [SerializeField, Range(0.9f, 1f)] private float _buttonPressedScale = 0.96f;
+
+        public float ButtonPressSeconds
+        {
+            get => _buttonPressSeconds;
+            set { ValidateOptionalDuration(value); _buttonPressSeconds = value; }
+        }
+
+        public float ButtonReleaseSeconds
+        {
+            get => _buttonReleaseSeconds;
+            set { ValidateOptionalDuration(value); _buttonReleaseSeconds = value; }
+        }
+
+        public float ButtonPressedScale
+        {
+            get => _buttonPressedScale;
+            set { ValidateRange(value, 0.9f, 1f); _buttonPressedScale = value; }
+        }
 
         public float SummaryEntranceSeconds
         {
@@ -374,6 +397,9 @@ namespace VertigoWheel.Settings
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
+            ValidateOptionalDuration(_buttonPressSeconds);
+            ValidateOptionalDuration(_buttonReleaseSeconds);
+            ValidateRange(_buttonPressedScale, 0.9f, 1f);
             ValidateOptionalDuration(_summaryEntranceSeconds);
             ValidateOptionalDuration(_summaryStaggerSeconds);
             ValidateRange(_summaryCardLift, 0f, 30f);

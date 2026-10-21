@@ -520,6 +520,35 @@ namespace VertigoWheel.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Continue_AuthoredTimingUnlocksSpinAndExitSooner_WithoutEarlyInputOrAnotherGrant()
+        {
+            AnimationSettings authored = ReadField<GameSettings>(FindInScene<GameBootstrap>(), "_settings").AnimationSettings;
+            _settings.AnimationSettings.RewardFlightEnabled = true;
+            _settings.AnimationSettings.RewardFlightDurationSeconds = authored.RewardFlightDurationSeconds;
+            _settings.AnimationSettings.RewardFlightStaggerSeconds = authored.RewardFlightStaggerSeconds;
+            _settings.AnimationSettings.RewardFlightFadeDurationSeconds = authored.RewardFlightFadeDurationSeconds;
+            _settings.AnimationSettings.ZoneTransitionSeconds = authored.ZoneTransitionSeconds;
+            _settings.AnimationSettings.WheelCrossfadeSeconds = authored.WheelCrossfadeSeconds;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            ClickAction(_reward);
+            var spin = _view.Wheel.transform.Find("ui_button_spin").GetComponent<UnityEngine.UI.Button>();
+            var exit = _view.GetComponentsInChildren<ActionButtonView>().Single(b => b.name == "ui_button_exit");
+            yield return new WaitForSecondsRealtime(.10f);
+            Assert.That(spin.IsInteractable(), Is.False);
+            Assert.That(exit.IsInteractable, Is.False);
+            ClickSpin(); ClickBoardExit();
+            Assert.That(_run.PendingSpin, Is.Null);
+            yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(spin.IsInteractable(), Is.True, "Continue should release the board within 0.35 seconds.");
+            Assert.That(exit.IsInteractable, Is.True);
+            AssertRewardSettledOnce(ticket);
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator ZoneTransition_UsesCapturedTiming_AndDoesNotReleaseInputBeforeFlight()
         {
             _settings.AnimationSettings.ZoneTransitionSeconds = 0.05f;

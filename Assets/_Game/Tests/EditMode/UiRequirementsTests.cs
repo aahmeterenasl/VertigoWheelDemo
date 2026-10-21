@@ -50,7 +50,10 @@ namespace VertigoWheel.Tests.EditMode
                     {
                         string context = path + ": " + image.name;
                         bool isViewport = IsScrollViewport(image);
-                        bool isButtonTarget = image.GetComponent<Selectable>()?.targetGraphic == image;
+                        Selectable selectable = image.GetComponent<Selectable>();
+                        bool isButtonTarget = selectable != null && (selectable.targetGraphic == image
+                            || (selectable.GetComponent<ButtonFeedbackView>() != null && selectable.targetGraphic != null
+                                && selectable.targetGraphic.transform.IsChildOf(image.transform)));
                         bool isModalBlocker = image.GetComponent<DialogView>() != null;
                         Assert.That(!image.raycastTarget || (image.enabled &&
                             (isViewport || isButtonTarget || isModalBlocker)), Is.True,
@@ -86,6 +89,34 @@ namespace VertigoWheel.Tests.EditMode
                             AssertValueNames(component, path);
                         }
                     }
+                }
+            });
+        }
+
+        [TestCaseSource(nameof(AuthoredUiAssets))]
+        public void Buttons_AnimateDedicatedVisualsAndKeepTheirTouchRectangles(string path)
+        {
+            Inspect(path, roots =>
+            {
+                foreach (Button button in roots.SelectMany(root => root.GetComponentsInChildren<Button>(true)))
+                {
+                    var feedback = button.GetComponent<ButtonFeedbackView>();
+                    Assert.That(feedback, Is.Not.Null, path + ": " + button.name);
+                    var data = new SerializedObject(feedback);
+                    var visual = (RectTransform)data.FindProperty("_visual").objectReferenceValue;
+                    Assert.That(visual, Is.Not.Null);
+                    Assert.That(visual, Is.Not.EqualTo(button.transform));
+                    Assert.That(visual.IsChildOf(button.transform), Is.True);
+                    Assert.That(button.targetGraphic.transform.IsChildOf(visual), Is.True);
+                    Assert.That(button.targetGraphic.raycastTarget, Is.False);
+                    Assert.That(button.GetComponent<Image>().raycastTarget, Is.True);
+                    Assert.That(button.GetComponent<Image>().color.a, Is.Zero);
+                    Assert.That(data.FindProperty("_settings").objectReferenceValue, Is.Not.Null);
+                    data.FindProperty("_visual").objectReferenceValue = null;
+                    data.ApplyModifiedPropertiesWithoutUndo();
+                    typeof(ButtonFeedbackView).GetMethod("OnValidate", PrivateInstance).Invoke(feedback, null);
+                    data.Update();
+                    Assert.That(data.FindProperty("_visual").objectReferenceValue, Is.EqualTo(visual));
                 }
             });
         }
