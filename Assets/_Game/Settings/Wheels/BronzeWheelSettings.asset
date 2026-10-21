@@ -16,7 +16,7 @@ MonoBehaviour:
   _pointerSprite: {fileID: 21300000, guid: b218e39582074314ba74b9887eb6da70, type: 3}
   _spinButtonColor: {r: 0.76, g: 0.43, b: 0.2, a: 1}
   _headingText: BRONZE SPIN
-  _statusText: Spin to win rewards
+  _statusText: Take a spin. Test your luck.
   _headingColor: {r: 1, g: 0.72, b: 0.34, a: 1}
   _slotZeroAngleDegrees: 0
   _clockwiseSlotOrder: 1

@@ -16,7 +16,7 @@ MonoBehaviour:
   _pointerSprite: {fileID: 21300000, guid: 4e836c60197f4f047b12f7c5ffa93e7d, type: 3}
   _spinButtonColor: {r: 1, g: 0.52, b: 0.045, a: 1}
   _headingText: GOLDEN SPIN
-  _statusText: "Golden spin \u2022 no bombs"
+  _statusText: Golden rewards await.
   _headingColor: {r: 1, g: 0.82, b: 0.12, a: 1}
   _slotZeroAngleDegrees: 0
   _clockwiseSlotOrder: 1
