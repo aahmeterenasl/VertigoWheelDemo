@@ -114,6 +114,14 @@ namespace VertigoWheel.Tests.EditMode
                     {
                         AssertSeparateChild(wheel, "_rotationRoot");
                     }
+                    foreach (WheelFeedbackView feedback in root.GetComponentsInChildren<WheelFeedbackView>(true))
+                    {
+                        AssertSeparateChild(feedback, "_pointerMotion");
+                        var motion = (Transform)typeof(WheelFeedbackView).GetField("_pointerMotion", PrivateInstance).GetValue(feedback);
+                        var placement = (Transform)typeof(WheelView).GetField("_pointerLayout", PrivateInstance)
+                            .GetValue(feedback.GetComponent<WheelView>());
+                        Assert.That(motion.parent, Is.EqualTo(placement), "Pointer motion must be below its layout parent.");
+                    }
                 }
             });
         }

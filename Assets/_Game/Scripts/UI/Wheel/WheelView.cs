@@ -24,6 +24,9 @@ namespace VertigoWheel.UI.Wheel
         private UnityEngine.UI.Image _pointer;
 
         [SerializeField]
+        private RectTransform _pointerLayout;
+
+        [SerializeField]
         private UnityEngine.UI.Button _spinButton;
 
         [SerializeField]
@@ -204,9 +207,10 @@ namespace VertigoWheel.UI.Wheel
                 _slots[index].SetLayout(PositionAt(angle, size * _slotRadiusRatio),
                     size * _slotSizeRatio, (float)angle);
             }
-            _pointer.rectTransform.anchoredPosition = PositionAt(_pointerAngle, size * 0.43f);
-            _pointer.rectTransform.sizeDelta = new Vector2(size * 0.085f, size * 0.13f);
-            _pointer.rectTransform.localRotation = Quaternion.Euler(0, 0, _pointerAngle);
+            RectTransform pointerLayout = _pointerLayout != null ? _pointerLayout : _pointer.rectTransform;
+            pointerLayout.anchoredPosition = PositionAt(_pointerAngle, size * 0.43f);
+            pointerLayout.sizeDelta = new Vector2(size * 0.085f, size * 0.13f);
+            pointerLayout.localRotation = Quaternion.Euler(0, 0, _pointerAngle);
             ((RectTransform)_spinButton.transform).sizeDelta = Vector2.one * size * 0.28f;
         }
 

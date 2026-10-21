@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Reflection;
 using DG.Tweening;
 using NUnit.Framework;
 using TMPro;
@@ -111,6 +112,8 @@ namespace VertigoWheel.Tests.PlayMode
             _animationSettings.FullTurns = 20;
             _animationSettings.ClockwiseSpin = !_animationSettings.ClockwiseSpin;
             _animationSettings.SpinEase = Ease.Linear;
+            _animationSettings.PointerTickDurationSeconds = 60f;
+            _animationSettings.WheelFeedbackEnabled = false;
 
             yield return WaitUntilSpinStops();
 
@@ -289,7 +292,7 @@ namespace VertigoWheel.Tests.PlayMode
                     Assert.That(Quaternion.Angle(slot.localRotation,
                         Quaternion.Euler(0, 0, slotZeroAngle + index * 360f / WheelData.SlotCount)), Is.LessThan(0.01f));
                 }
-                RectTransform pointer = (RectTransform)_view.transform.Find("ui_image_wheel_pointer_value");
+                RectTransform pointer = (RectTransform)_view.transform.Find("ui_panel_wheel_pointer");
                 Vector2 pointerPosition = new Vector2(-Mathf.Sin(pointerAngle * Mathf.Deg2Rad),
                     Mathf.Cos(pointerAngle * Mathf.Deg2Rad)) * 400f * 0.43f;
                 Assert.That(Vector2.Distance(pointer.anchoredPosition, pointerPosition), Is.LessThan(0.01f));
@@ -314,6 +317,65 @@ namespace VertigoWheel.Tests.PlayMode
             {
                 Object.Destroy(visualSettings);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator PointerFeedback_CoalescesCrossingsAndSurvivesResize_InBothDirections()
+        {
+            WheelFeedbackView feedback = _view.GetComponent<WheelFeedbackView>();
+            RectTransform motion = ReadFeedback<RectTransform>(feedback, "_pointerMotion");
+            _animationSettings.PointerTickDurationSeconds = 0.12f;
+            foreach (int direction in new[] { -1, 1 })
+            {
+                float center = (float)(_view.PointerAngleDegrees - _view.SlotZeroAngleDegrees);
+                _view.SetRotation(center);
+                Assert.That(feedback.TryBeginSpin(_view, _animationSettings), Is.True);
+                Tween pointerTween = ReadFeedback<Tween>(feedback, "_pointerTween");
+                feedback.UpdateSpin(center + direction * 10f);
+                Assert.That(pointerTween.IsPlaying(), Is.False, "A slot center is not a boundary.");
+                feedback.UpdateSpin(center + direction * 30f);
+                yield return new WaitForSecondsRealtime(0.03f);
+                Assert.That(Quaternion.Angle(motion.localRotation, Quaternion.identity), Is.GreaterThan(0.1f));
+                Quaternion deflection = motion.localRotation;
+                ((RectTransform)_view.transform).sizeDelta = Vector2.one * 400f;
+                Canvas.ForceUpdateCanvases();
+                Assert.That(Quaternion.Angle(motion.localRotation, deflection), Is.LessThan(0.01f),
+                    "Layout must only reposition the placement parent.");
+                feedback.UpdateSpin(center + direction * 1440f);
+                Assert.That(ReadFeedback<Tween>(feedback, "_pointerTween"), Is.SameAs(pointerTween));
+                yield return new WaitForSecondsRealtime(0.15f);
+                Assert.That(pointerTween.IsPlaying(), Is.False, "No skipped tick backlog should be queued.");
+                Assert.That(Quaternion.Angle(motion.localRotation, Quaternion.identity), Is.LessThan(0.01f));
+                feedback.ResetFeedback();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator DisablingPointerFeedback_DoesNotInterruptTheAcceptedSpin()
+        {
+            WheelFeedbackView feedback = _view.GetComponent<WheelFeedbackView>();
+            _animationSettings.SpinDurationSeconds = 0.08f;
+            Assert.That(_session.TryStartSpin(out SpinTicket ticket), Is.True);
+            int completions = 0;
+            Assert.That(_animator.TryPlay(ticket, _animationSettings, _ => completions++), Is.True);
+            feedback.enabled = false;
+            AssertFeedbackReset(feedback);
+            yield return WaitUntilSpinStops();
+            Assert.That(completions, Is.EqualTo(1));
+            AssertLanding(GetExpectedTarget(ticket));
+            AssertFeedbackReset(feedback);
+            Assert.That(_animator.CompleteImmediately(), Is.False);
+        }
+
+        private static T ReadFeedback<T>(WheelFeedbackView feedback, string field)
+        {
+            return (T)typeof(WheelFeedbackView).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(feedback);
+        }
+
+        private static void AssertFeedbackReset(WheelFeedbackView feedback)
+        {
+            Assert.That(Quaternion.Angle(ReadFeedback<RectTransform>(feedback, "_pointerMotion").localRotation,
+                Quaternion.identity), Is.LessThan(0.01f));
         }
 
         private void BindSessionWheel()

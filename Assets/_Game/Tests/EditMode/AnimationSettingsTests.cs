@@ -72,12 +72,23 @@ namespace VertigoWheel.Tests.EditMode
         [TestCase("_rewardRevealDurationSeconds", -1f)]
         [TestCase("_rewardRevealDurationSeconds", float.NaN)]
         [TestCase("_rewardRevealDurationSeconds", float.PositiveInfinity)]
+        [TestCase("_pointerTickDurationSeconds", -1f)]
+        [TestCase("_pointerTickDurationSeconds", float.NaN)]
         public void SerializedInvalidDialogDurations_AreValidated(string field, float duration)
         {
             SerializedObject serialized = new SerializedObject(_settings);
             serialized.FindProperty(field).floatValue = duration;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
+        }
+
+        [TestCase(-1f)]
+        [TestCase(16f)]
+        [TestCase(float.NaN)]
+        public void InvalidFeedbackAngle_DoesNotReplaceAuthoredValue(float angle)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.PointerTickAngleDegrees = angle);
+            Assert.That(_settings.PointerTickAngleDegrees, Is.EqualTo(6f));
         }
 
         [Test]

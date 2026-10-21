@@ -31,6 +31,42 @@ namespace VertigoWheel.Settings
         [SerializeField]
         private Sprite _rewardShineSprite;
 
+        [Header("Wheel feedback")]
+        [SerializeField]
+        private bool _wheelFeedbackEnabled = true;
+
+        [SerializeField, Range(0f, 15f)]
+        private float _pointerTickAngleDegrees = 6f;
+
+        [SerializeField, Min(0f)]
+        private float _pointerTickDurationSeconds = 0.08f;
+
+        public bool WheelFeedbackEnabled
+        {
+            get => _wheelFeedbackEnabled;
+            set => _wheelFeedbackEnabled = value;
+        }
+
+        public float PointerTickAngleDegrees
+        {
+            get => _pointerTickAngleDegrees;
+            set
+            {
+                ValidateTickAngle(value);
+                _pointerTickAngleDegrees = value;
+            }
+        }
+
+        public float PointerTickDurationSeconds
+        {
+            get => _pointerTickDurationSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _pointerTickDurationSeconds = value;
+            }
+        }
+
         public float SpinDurationSeconds
         {
             get => _spinDurationSeconds;
@@ -107,13 +143,23 @@ namespace VertigoWheel.Settings
             ValidateEase(_spinEase);
             ValidateOptionalDuration(_dialogDurationSeconds);
             ValidateOptionalDuration(_rewardRevealDurationSeconds);
+            ValidateTickAngle(_pointerTickAngleDegrees);
+            ValidateOptionalDuration(_pointerTickDurationSeconds);
+        }
+
+        private static void ValidateTickAngle(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f || value > 15f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Pointer deflection must be between zero and 15 degrees.");
+            }
         }
 
         private static void ValidateOptionalDuration(float value)
         {
             if (float.IsNaN(value) || float.IsInfinity(value) || value < 0f)
             {
-                throw new ArgumentOutOfRangeException(nameof(value), "Dialog duration must be nonnegative and finite.");
+                throw new ArgumentOutOfRangeException(nameof(value), "Optional animation durations must be nonnegative and finite.");
             }
         }
 

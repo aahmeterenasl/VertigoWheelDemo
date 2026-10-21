@@ -149,13 +149,13 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3255749897040786460}
+  m_Father: {fileID: 2616851656511199379}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: 326.80002}
-  m_SizeDelta: {x: 64.6, y: 98.799995}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &5627732881034932439
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -205,6 +205,7 @@ GameObject:
   - component: {fileID: 3255749897040786460}
   - component: {fileID: 1806475901054206820}
   - component: {fileID: 1274503194021422682}
+  - component: {fileID: 3563662869743714828}
   m_Layer: 5
   m_Name: ui_panel_wheel
   m_TagString: Untagged
@@ -225,7 +226,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3439353457793640356}
-  - {fileID: 7675615138485226075}
+  - {fileID: 2616851656511199379}
   - {fileID: 8271210712052643194}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -250,6 +251,7 @@ MonoBehaviour:
   _rotationRoot: {fileID: 3439353457793640356}
   _baseImage: {fileID: 390638985715043240}
   _pointer: {fileID: 4611902254131939811}
+  _pointerLayout: {fileID: 2616851656511199379}
   _spinButton: {fileID: 4671813494498024408}
   _slots:
   - {fileID: 2518873188810780398}
@@ -273,6 +275,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: VertigoWheel.UI::VertigoWheel.UI.Wheel.WheelAnimator
   _view: {fileID: 1806475901054206820}
+  _feedback: {fileID: 3563662869743714828}
+--- !u!114 &3563662869743714828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3798487952742696658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdf783c0c5187c34cb94945e53f76839, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: VertigoWheel.UI::VertigoWheel.UI.Wheel.WheelFeedbackView
+  _pointerMotion: {fileID: 7675615138485226075}
 --- !u!1 &5694802846385080826
 GameObject:
   m_ObjectHideFlags: 0
@@ -393,6 +409,42 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &7161281938770340230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2616851656511199379}
+  m_Layer: 0
+  m_Name: ui_panel_wheel_pointer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2616851656511199379
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7161281938770340230}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7675615138485226075}
+  m_Father: {fileID: 3255749897040786460}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0, y: 326.80002}
+  m_SizeDelta: {x: 64.6, y: 98.799995}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &162384496534484203
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -453,6 +453,9 @@ namespace VertigoWheel.App
             _uiAnimation.RewardRevealDurationSeconds = source.RewardRevealDurationSeconds;
             _uiAnimation.RewardGlowSprite = source.RewardGlowSprite;
             _uiAnimation.RewardShineSprite = source.RewardShineSprite;
+            _uiAnimation.WheelFeedbackEnabled = source.WheelFeedbackEnabled;
+            _uiAnimation.PointerTickAngleDegrees = source.PointerTickAngleDegrees;
+            _uiAnimation.PointerTickDurationSeconds = source.PointerTickDurationSeconds;
         }
 
         private void ValidatePreparedVisuals()

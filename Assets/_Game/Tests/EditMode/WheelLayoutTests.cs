@@ -177,7 +177,7 @@ namespace VertigoWheel.Tests.EditMode
                     Is.EqualTo(diameter * _settings.SlotSizeRatio * 0.19f).Within(0.01f));
             }
 
-            RectTransform pointer = (RectTransform)_view.transform.Find("ui_image_wheel_pointer_value");
+            RectTransform pointer = (RectTransform)_view.transform.Find("ui_panel_wheel_pointer");
             Assert.That(pointer, Is.Not.Null);
             AssertVector(pointer.anchoredPosition, PositionAt(_settings.PointerAngleDegrees, diameter * 0.43f),
                 "Pointer position");

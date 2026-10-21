@@ -12,10 +12,14 @@ namespace VertigoWheel.UI.Wheel
         [SerializeField]
         private WheelView _view;
 
+        [SerializeField]
+        private WheelFeedbackView _feedback;
+
         private Tween _spinTween;
         private SpinTicket _ticket;
         private Action<SpinTicket> _completed;
         private float _targetRotation;
+        private bool _hasFeedback;
 
         public bool IsSpinning => _ticket != null;
 
@@ -41,13 +45,24 @@ namespace VertigoWheel.UI.Wheel
             _targetRotation = (float)WheelAngleCalculator.GetTargetRotationDegrees(
                 _view.RotationDegrees, ticket.SelectedSlotIndex, _view.SlotZeroAngleDegrees,
                 _view.ClockwiseSlotOrder, _view.PointerAngleDegrees, settings.FullTurns, settings.ClockwiseSpin);
+            _hasFeedback = _feedback != null && _feedback.TryBeginSpin(_view, settings);
             _ticket = ticket;
             _completed = completed;
             _view.SetSpinInteractable(false);
             _spinTween = DOTween.To(() => _view.RotationDegrees, _view.SetRotation, _targetRotation, duration)
                 .SetEase(ease).SetUpdate(true).SetTarget(this)
-                .SetLink(gameObject, LinkBehaviour.KillOnDisable).OnComplete(Finish);
+                .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+                .OnUpdate(UpdateFeedback)
+                .OnComplete(Finish);
             return true;
+        }
+
+        private void UpdateFeedback()
+        {
+            if (_hasFeedback && _feedback != null)
+            {
+                _feedback.UpdateSpin(_view.RotationDegrees);
+            }
         }
 
         /// <summary>Finish the accepted visual spin through the same once-only callback path on resume.</summary>
@@ -69,6 +84,7 @@ namespace VertigoWheel.UI.Wheel
             _ticket = null;
             _completed = null;
             tween?.Kill(false);
+            _feedback?.ResetFeedback();
         }
 
         private void Finish()
@@ -83,6 +99,7 @@ namespace VertigoWheel.UI.Wheel
             _spinTween = null;
             _ticket = null;
             _completed = null;
+            _feedback?.ResetFeedback();
             completed(ticket);
         }
 
@@ -92,6 +109,10 @@ namespace VertigoWheel.UI.Wheel
 
         private void CacheView()
         {
+            if (_feedback == null)
+            {
+                _feedback = GetComponent<WheelFeedbackView>();
+            }
             if (_view == null)
             {
                 _view = GetComponent<WheelView>();
