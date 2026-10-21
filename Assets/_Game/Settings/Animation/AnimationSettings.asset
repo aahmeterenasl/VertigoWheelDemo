@@ -24,6 +24,12 @@ MonoBehaviour:
   _rewardTextOffset: 10
   _rewardGlowSprite: {fileID: 21300000, guid: 098fdd5016debf64286e3cd573e244ac, type: 3}
   _rewardShineSprite: {fileID: 21300000, guid: ce9ea7ee4d1f56843a9c0f8a0ee3c60e, type: 3}
+  _rewardFlightEnabled: 1
+  _rewardFlightDurationSeconds: 0.35
+  _rewardFlightStaggerSeconds: 0.035
+  _rewardFlightFadeDurationSeconds: 0.14
+  _rewardFlightArcHeight: 40
+  _rewardFlightStartScale: 0.4
   _wheelFeedbackEnabled: 1
   _pointerTickAngleDegrees: 6
   _pointerTickDurationSeconds: 0.08

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using VertigoWheel.Core.Rewards;
 using VertigoWheel.Settings;
 
 namespace VertigoWheel.UI.Rewards
@@ -21,6 +22,11 @@ namespace VertigoWheel.UI.Rewards
         [SerializeField]
         private bool _showQuantityPrefix = true;
 
+        private RewardId _rewardId;
+
+        public RewardId RewardId => _rewardId;
+        public RectTransform IconTransform => _icon != null ? _icon.rectTransform : null;
+
         public void Bind(RewardSettings reward, long quantity)
         {
             if (reward == null)
@@ -34,6 +40,7 @@ namespace VertigoWheel.UI.Rewards
             reward.Validate();
             ValidateReferences();
 
+            _rewardId = reward.RewardId;
             _icon.sprite = reward.Icon;
             _icon.preserveAspect = true;
             if (_name != null)

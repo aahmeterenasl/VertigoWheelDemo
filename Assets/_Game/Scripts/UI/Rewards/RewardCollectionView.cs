@@ -89,6 +89,25 @@ namespace VertigoWheel.UI.Rewards
             }
         }
 
+        public bool TryGetArrivalTarget(RewardId rewardId, out RectTransform icon, out RectTransform viewport)
+        {
+            icon = null;
+            viewport = _scrollRect != null ? _scrollRect.viewport : null;
+            if (viewport == null || !viewport.gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+            foreach (RewardItemView item in _items)
+            {
+                if (item != null && item.gameObject.activeInHierarchy && item.RewardId == rewardId)
+                {
+                    icon = item.IconTransform;
+                    return icon != null;
+                }
+            }
+            return false;
+        }
+
         public void SetInteractionEnabled(bool interactionEnabled)
         {
             if (_scrollRect == null)

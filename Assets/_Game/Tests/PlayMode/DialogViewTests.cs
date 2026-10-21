@@ -89,6 +89,25 @@ namespace VertigoWheel.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AnimatedHide_BlocksUntilClosed_AndReopenCancelsTheObsoleteHide()
+        {
+            _dialog.Show(0f);
+            _dialog.Hide(0.08f);
+            Assert.That(_dialog.IsReady, Is.False);
+            Assert.That(_group.blocksRaycasts, Is.True);
+            Assert.That(_group.interactable, Is.False);
+            _dialog.Show(0f);
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(_root.activeSelf, Is.True);
+            Assert.That(_dialog.IsReady, Is.True);
+            Assert.That(_group.alpha, Is.EqualTo(1f));
+            _dialog.Hide(0.05f);
+            yield return new WaitForSecondsRealtime(0.1f);
+            Assert.That(_root.activeSelf, Is.False);
+            Assert.That(_group.blocksRaycasts, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator DisableWhileOpening_DropsTheCallbackAndReleasesInput()
         {
             int completions = 0;

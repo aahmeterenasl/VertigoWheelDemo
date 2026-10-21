@@ -64,6 +64,7 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.AnimationSettings.FullTurns = 1;
             _settings.AnimationSettings.DialogDurationSeconds = 0f;
             _settings.AnimationSettings.RewardRevealDurationSeconds = 0f;
+            _settings.AnimationSettings.RewardFlightEnabled = false;
 
             _view = FindInScene<GameView>();
             _reward = FindInScene<RewardRevealView>();
@@ -144,6 +145,79 @@ namespace VertigoWheel.Tests.PlayMode
             Assert.That(_run.ZoneNumber, Is.EqualTo(2));
             Assert.That(_run.PendingSpin, Is.Null);
             Assert.That(_view.Wheel.BoundWheel, Is.SameAs(_run.Wheel));
+            AssertRewardSettledOnce(ticket);
+        }
+
+        [UnityTest]
+        public IEnumerator RewardArrival_PreparesOnce_BlocksActions_AndResumeSettlesOnlyCosmetics()
+        {
+            _settings.AnimationSettings.RewardFlightEnabled = true;
+            _settings.AnimationSettings.RewardFlightDurationSeconds = 0.4f;
+            _settings.AnimationSettings.RewardFlightFadeDurationSeconds = 0.08f;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            Sprite acceptedIcon = _reward.RewardIcon.sprite;
+            ClickAction(_reward);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.True);
+            Assert.That(_run.State, Is.EqualTo(RunState.Ready));
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+            int randomCalls = _wheelRandom.CallCount;
+            ClickSpin();
+            ClickBoardExit();
+            ClickAction(_reward);
+            Assert.That(_run.PendingSpin, Is.Null);
+            Assert.That(_wheelRandom.CallCount, Is.EqualTo(randomCalls));
+            AssertRewardSettledOnce(ticket);
+            yield return new WaitForSecondsRealtime(0.08f);
+            var copies = _view.RewardArrival.GetComponentsInChildren<UnityEngine.UI.Image>(true);
+            Assert.That(copies.Length, Is.EqualTo(3));
+            Assert.That(copies.Any(copy => copy.gameObject.activeSelf), Is.True);
+            Assert.That(copies.All(copy => copy.sprite == acceptedIcon), Is.True);
+            _settings.AnimationSettings.RewardFlightDurationSeconds = 60f;
+            _controller.Resume();
+            Assert.That(_view.RewardArrival.IsPlaying, Is.False);
+            Assert.That(copies.All(copy => !copy.gameObject.activeSelf && copy.sprite == null), Is.True);
+            Assert.That(_reward.gameObject.activeSelf, Is.False);
+            ClickSpin();
+            Assert.That(_run.State, Is.EqualTo(RunState.Spinning));
+            SpinTicket next = _run.PendingSpin;
+            yield return new WaitForSecondsRealtime(0.55f);
+            Assert.That(_run.PendingSpin, Is.SameAs(next), "An obsolete arrival must not complete a later action.");
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator RewardArrival_DisablingOptionalView_ReleasesControlsWithoutGrantingAgain()
+        {
+            _settings.AnimationSettings.RewardFlightEnabled = true;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            ClickAction(_reward);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.True);
+            _view.RewardArrival.enabled = false;
+            yield return null;
+            Assert.That(_view.RewardArrival.IsPlaying, Is.False);
+            AssertRewardSettledOnce(ticket);
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+            Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator DisposeDuringArrival_CancelsCopiesAndKeepsTheBoardBlocked()
+        {
+            _settings.AnimationSettings.RewardFlightEnabled = true;
+            SpinTicket ticket = StartRewardSpin();
+            _controller.Resume();
+            ClickAction(_reward);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.True);
+            _controller.Dispose();
+            yield return new WaitForSecondsRealtime(0.6f);
+            Assert.That(_view.RewardArrival.IsPlaying, Is.False);
+            Assert.That(_view.RewardArrival.GetComponentsInChildren<UnityEngine.UI.Image>(true)
+                .All(copy => !copy.gameObject.activeSelf), Is.True);
+            ClickSpin();
+            Assert.That(_run.PendingSpin, Is.Null);
             AssertRewardSettledOnce(ticket);
         }
 

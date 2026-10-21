@@ -99,6 +99,11 @@ namespace VertigoWheel.Tests.EditMode
         [TestCase("_rewardIconPeakScale", float.PositiveInfinity)]
         [TestCase("_rewardTextOffset", -1f)]
         [TestCase("_rewardTextOffset", 31f)]
+        [TestCase("_rewardFlightDurationSeconds", -1f)]
+        [TestCase("_rewardFlightStaggerSeconds", float.NaN)]
+        [TestCase("_rewardFlightFadeDurationSeconds", float.PositiveInfinity)]
+        [TestCase("_rewardFlightArcHeight", 201f)]
+        [TestCase("_rewardFlightStartScale", 0f)]
         public void InvalidSerializedRevealMotion_IsRejectedBeforeItCanBeApplied(string field, float value)
         {
             using (var serialized = new SerializedObject(_settings))

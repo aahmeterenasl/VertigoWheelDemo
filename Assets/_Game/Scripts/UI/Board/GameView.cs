@@ -46,11 +46,15 @@ namespace VertigoWheel.UI.Board
         [SerializeField]
         private ZoneTrackView _zoneTrack;
 
+        [SerializeField]
+        private RewardArrivalView _rewardArrival;
+
         private ActionButtonView _listenedExitButton;
         private string _statusMessage = string.Empty;
 
         public WheelView Wheel => _wheel;
         public WheelAnimator WheelAnimator => _wheelAnimator;
+        public RewardArrivalView RewardArrival => _rewardArrival;
 
         public event Action ExitRequested;
 

@@ -77,6 +77,30 @@ namespace VertigoWheel.UI.Dialogs
             gameObject.SetActive(false);
         }
 
+        public void Hide(float duration)
+        {
+            if (float.IsNaN(duration) || float.IsInfinity(duration) || duration < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(duration));
+            }
+            if (duration == 0f || !_isOpen)
+            {
+                Hide();
+                return;
+            }
+            CancelOpening();
+            int version = _showVersion;
+            _group.interactable = false;
+            _openingTween = DOTween.To(() => _group.alpha, value => _group.alpha = value, 0f, duration)
+                .SetUpdate(true).SetTarget(this).SetLink(gameObject, LinkBehaviour.KillOnDisable)
+                .OnComplete(() =>
+                {
+                    if (version != _showVersion) return;
+                    _openingTween = null;
+                    Hide();
+                });
+        }
+
         private void FinishOpening(int version)
         {
             if (version != _showVersion || !_isOpen || !isActiveAndEnabled)

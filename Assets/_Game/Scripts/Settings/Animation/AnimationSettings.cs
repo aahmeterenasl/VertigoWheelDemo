@@ -44,6 +44,25 @@ namespace VertigoWheel.Settings
         [SerializeField]
         private Sprite _rewardShineSprite;
 
+        [Header("Reward arrival")]
+        [SerializeField]
+        private bool _rewardFlightEnabled = true;
+
+        [SerializeField, Min(0f)]
+        private float _rewardFlightDurationSeconds = 0.35f;
+
+        [SerializeField, Min(0f)]
+        private float _rewardFlightStaggerSeconds = 0.035f;
+
+        [SerializeField, Min(0f)]
+        private float _rewardFlightFadeDurationSeconds = 0.14f;
+
+        [SerializeField, Range(0f, 200f)]
+        private float _rewardFlightArcHeight = 40f;
+
+        [SerializeField, Range(0.1f, 1f)]
+        private float _rewardFlightStartScale = 0.4f;
+
         [Header("Wheel feedback")]
         [SerializeField]
         private bool _wheelFeedbackEnabled = true;
@@ -53,6 +72,62 @@ namespace VertigoWheel.Settings
 
         [SerializeField, Min(0f)]
         private float _pointerTickDurationSeconds = 0.08f;
+
+        public bool RewardFlightEnabled
+        {
+            get => _rewardFlightEnabled;
+            set => _rewardFlightEnabled = value;
+        }
+
+        public float RewardFlightDurationSeconds
+        {
+            get => _rewardFlightDurationSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _rewardFlightDurationSeconds = value;
+            }
+        }
+
+        public float RewardFlightStaggerSeconds
+        {
+            get => _rewardFlightStaggerSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _rewardFlightStaggerSeconds = value;
+            }
+        }
+
+        public float RewardFlightFadeDurationSeconds
+        {
+            get => _rewardFlightFadeDurationSeconds;
+            set
+            {
+                ValidateOptionalDuration(value);
+                _rewardFlightFadeDurationSeconds = value;
+            }
+        }
+
+        public float RewardFlightArcHeight
+        {
+            get => _rewardFlightArcHeight;
+            set
+            {
+                ValidateRange(value, 0f, 200f);
+                _rewardFlightArcHeight = value;
+            }
+        }
+
+        public float RewardFlightStartScale
+        {
+            get => _rewardFlightStartScale;
+            set
+            {
+                ValidateRange(value, 0.1f, 1f);
+                _rewardFlightStartScale = value;
+            }
+        }
 
         public float RewardShineDegreesPerSecond
         {
@@ -200,6 +275,11 @@ namespace VertigoWheel.Settings
             ValidateRange(_rewardIconStartScale, 0.5f, 1f);
             ValidateRange(_rewardIconPeakScale, 1f, 1.1f);
             ValidateRange(_rewardTextOffset, 0f, 30f);
+            ValidateOptionalDuration(_rewardFlightDurationSeconds);
+            ValidateOptionalDuration(_rewardFlightStaggerSeconds);
+            ValidateOptionalDuration(_rewardFlightFadeDurationSeconds);
+            ValidateRange(_rewardFlightArcHeight, 0f, 200f);
+            ValidateRange(_rewardFlightStartScale, 0.1f, 1f);
             ValidateTickAngle(_pointerTickAngleDegrees);
             ValidateOptionalDuration(_pointerTickDurationSeconds);
         }

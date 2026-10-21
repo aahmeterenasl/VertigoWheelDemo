@@ -29,6 +29,7 @@ namespace VertigoWheel.App
 
         private ActiveModal _modal;
         private SpinTicket _activeTicket;
+        private SpinTicket _arrivalTicket;
         private WheelData _boundWheel;
         private RunSnapshot _lastSnapshot;
         private ZoneRules _lastRules;
@@ -88,6 +89,14 @@ namespace VertigoWheel.App
         /// <summary>Completes an accepted spin through its original once-only settlement path after app suspension.</summary>
         public void Resume()
         {
+            if (!_disposed && _arrivalTicket != null)
+            {
+                SpinTicket arrival = _arrivalTicket;
+                _rewardReveal.Hide();
+                if (_view.RewardArrival == null || !_view.RewardArrival.CompleteImmediately())
+                    FinishArrival(arrival);
+                return;
+            }
             if (_disposed || _run.State != RunState.Spinning
                 || !ReferenceEquals(_run.PendingSpin, _activeTicket))
             {
@@ -106,8 +115,10 @@ namespace VertigoWheel.App
                 return;
             }
             _disposed = true;
+            _arrivalTicket = null;
             if (_view != null)
             {
+                _view.RewardArrival?.Cancel();
                 if (_view.Wheel != null)
                 {
                     _view.Wheel.SpinRequested -= HandleSpin;
@@ -237,22 +248,47 @@ namespace VertigoWheel.App
             {
                 CaptureAnimation();
                 ValidateNextWheelSources();
+                SpinTicket ticket = _activeTicket;
+                bool captured = _view.RewardArrival != null
+                    && _view.RewardArrival.TryCaptureSource(_rewardReveal.RewardIcon);
                 if (!_run.TryCompleteResolution(_activeTicket))
                 {
                     return;
                 }
                 _activeTicket = null;
-                _rewardReveal.Hide();
                 _view.SetStatus(string.Empty);
                 if (_run.State == RunState.CashedOut)
                 {
+                    _rewardReveal.Hide();
+                    _view.RewardArrival?.Cancel();
                     ShowSummary(_run.Summary);
                     return;
                 }
                 BindPreparedWheel();
+                if (captured)
+                {
+                    _arrivalTicket = ticket;
+                    Render();
+                    _rewardReveal.Hide(_uiAnimation.RewardFlightFadeDurationSeconds);
+                    if (_view.RewardArrival.TryPlay(ticket.Outcome.RewardId, _uiAnimation, () => FinishArrival(ticket)))
+                        return;
+                    FinishArrival(ticket);
+                    return;
+                }
+                _rewardReveal.Hide();
                 _modal = ActiveModal.None;
                 Render();
             }, ShowReward);
+        }
+
+        private void FinishArrival(SpinTicket ticket)
+        {
+            if (_disposed || !ReferenceEquals(_arrivalTicket, ticket)) return;
+            _arrivalTicket = null;
+            _view.RewardArrival?.Cancel();
+            _rewardReveal.Hide();
+            _modal = ActiveModal.None;
+            Execute(Render);
         }
 
         private void HandleExit()
@@ -323,6 +359,8 @@ namespace VertigoWheel.App
                 CaptureAnimation();
                 ValidateWheelSources(1);
                 _run.Restart();
+                _arrivalTicket = null;
+                _view.RewardArrival?.Cancel();
                 _view.WheelAnimator.Cancel();
                 _activeTicket = null;
                 BindPreparedWheel();
@@ -455,6 +493,12 @@ namespace VertigoWheel.App
             _uiAnimation.RewardIconStartScale = source.RewardIconStartScale;
             _uiAnimation.RewardIconPeakScale = source.RewardIconPeakScale;
             _uiAnimation.RewardTextOffset = source.RewardTextOffset;
+            _uiAnimation.RewardFlightEnabled = source.RewardFlightEnabled;
+            _uiAnimation.RewardFlightDurationSeconds = source.RewardFlightDurationSeconds;
+            _uiAnimation.RewardFlightStaggerSeconds = source.RewardFlightStaggerSeconds;
+            _uiAnimation.RewardFlightFadeDurationSeconds = source.RewardFlightFadeDurationSeconds;
+            _uiAnimation.RewardFlightArcHeight = source.RewardFlightArcHeight;
+            _uiAnimation.RewardFlightStartScale = source.RewardFlightStartScale;
             _uiAnimation.RewardGlowSprite = source.RewardGlowSprite;
             _uiAnimation.RewardShineSprite = source.RewardShineSprite;
             _uiAnimation.WheelFeedbackEnabled = source.WheelFeedbackEnabled;

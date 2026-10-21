@@ -50,6 +50,7 @@ namespace VertigoWheel.UI.Dialogs
 
         public event Action ContinueRequested;
         public bool IsReady => _dialog != null && _dialog.IsReady && !_actionPending;
+        public UnityEngine.UI.Image RewardIcon => _icon;
 
         public void Show(RewardSettings reward, long quantity, AnimationSettings settings)
         {
@@ -116,6 +117,14 @@ namespace VertigoWheel.UI.Dialogs
             _dialog.Hide();
         }
 
+        public void Hide(float duration)
+        {
+            _actionPending = true;
+            StopMotion();
+            _continueButton.SetInteractable(false);
+            _dialog.Hide(duration);
+        }
+
         private void FinishEntrance()
         {
             _entrance = null;
@@ -138,12 +147,17 @@ namespace VertigoWheel.UI.Dialogs
                 .SetTarget(this).SetLink(gameObject, LinkBehaviour.KillOnDisable);
         }
 
-        private void ResetMotion()
+        private void StopMotion()
         {
             _entrance?.Kill(false);
             _entrance = null;
             _shineTween?.Kill(false);
             _shineTween = null;
+        }
+
+        private void ResetMotion()
+        {
+            StopMotion();
             if (_iconGroup != null) _iconGroup.alpha = 1f;
             if (_textGroup != null)
             {
