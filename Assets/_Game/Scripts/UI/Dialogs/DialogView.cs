@@ -13,6 +13,9 @@ namespace VertigoWheel.UI.Dialogs
         [SerializeField]
         private RectTransform _content;
 
+        [SerializeField]
+        private CanvasGroup _backdrop;
+
         private Tween _openingTween;
         private Action _shown;
         private int _showVersion;
@@ -40,8 +43,11 @@ namespace VertigoWheel.UI.Dialogs
             gameObject.SetActive(true);
             _group.blocksRaycasts = true;
             _group.interactable = false;
-            _group.alpha = duration == 0f ? 1f : 0f;
-            _content.localScale = duration == 0f ? Vector3.one : Vector3.one * 0.92f;
+            // An optional backdrop lets a specialized view stage its own foreground.
+            CanvasGroup fadingGroup = _backdrop != null ? _backdrop : _group;
+            _group.alpha = 1f;
+            fadingGroup.alpha = duration == 0f ? 1f : 0f;
+            _content.localScale = duration == 0f || _backdrop != null ? Vector3.one : Vector3.one * 0.92f;
             if (duration == 0f)
             {
                 FinishOpening(version);
@@ -49,9 +55,17 @@ namespace VertigoWheel.UI.Dialogs
             }
 
             Sequence opening = DOTween.Sequence();
-            opening.Join(DOTween.To(() => _group.alpha, value => _group.alpha = value, 1f, duration));
-            opening.Join(DOTween.To(() => _content.localScale, value => _content.localScale = value,
-                Vector3.one, duration).SetEase(Ease.OutCubic));
+            if (_backdrop != null)
+            {
+                opening.Append(DOTween.To(() => fadingGroup.alpha, value => fadingGroup.alpha = value, 1f, duration * 0.5f));
+                opening.AppendInterval(duration * 0.5f);
+            }
+            else
+            {
+                opening.Join(DOTween.To(() => fadingGroup.alpha, value => fadingGroup.alpha = value, 1f, duration));
+                opening.Join(DOTween.To(() => _content.localScale, value => _content.localScale = value,
+                    Vector3.one, duration).SetEase(Ease.OutCubic));
+            }
             _openingTween = opening.SetUpdate(true).SetTarget(this)
                 .SetLink(gameObject, LinkBehaviour.KillOnDisable)
                 .OnComplete(() => FinishOpening(version));
@@ -71,6 +85,7 @@ namespace VertigoWheel.UI.Dialogs
             }
             _openingTween = null;
             _group.alpha = 1f;
+            if (_backdrop != null) _backdrop.alpha = 1f;
             _content.localScale = Vector3.one;
             _group.interactable = true;
             _isReady = true;
@@ -103,6 +118,7 @@ namespace VertigoWheel.UI.Dialogs
             {
                 _content.localScale = Vector3.one;
             }
+            if (_backdrop != null) _backdrop.alpha = 1f;
         }
 
         private void OnDisable() => ResetView();

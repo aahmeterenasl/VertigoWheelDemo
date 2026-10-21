@@ -40,7 +40,7 @@ namespace VertigoWheel.Tests.EditMode
             Assert.That(_settings.ClockwiseSpin, Is.True);
             Assert.That(_settings.SpinEase, Is.EqualTo(Ease.InOutCubic));
             Assert.That(_settings.DialogDurationSeconds, Is.EqualTo(0.18f));
-            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.25f));
+            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.32f));
             Assert.DoesNotThrow(() => _settings.Validate());
         }
 
@@ -63,7 +63,7 @@ namespace VertigoWheel.Tests.EditMode
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.DialogDurationSeconds = duration);
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.RewardRevealDurationSeconds = duration);
             Assert.That(_settings.DialogDurationSeconds, Is.EqualTo(0.18f));
-            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.25f));
+            Assert.That(_settings.RewardRevealDurationSeconds, Is.EqualTo(0.32f));
         }
 
         [TestCase("_dialogDurationSeconds", -1f)]
@@ -89,6 +89,24 @@ namespace VertigoWheel.Tests.EditMode
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => _settings.PointerTickAngleDegrees = angle);
             Assert.That(_settings.PointerTickAngleDegrees, Is.EqualTo(6f));
+        }
+
+        [TestCase("_rewardShineDegreesPerSecond", -1f)]
+        [TestCase("_rewardShineDegreesPerSecond", float.NaN)]
+        [TestCase("_rewardIconStartScale", 0.49f)]
+        [TestCase("_rewardIconStartScale", 1.01f)]
+        [TestCase("_rewardIconPeakScale", 0.99f)]
+        [TestCase("_rewardIconPeakScale", float.PositiveInfinity)]
+        [TestCase("_rewardTextOffset", -1f)]
+        [TestCase("_rewardTextOffset", 31f)]
+        public void InvalidSerializedRevealMotion_IsRejectedBeforeItCanBeApplied(string field, float value)
+        {
+            using (var serialized = new SerializedObject(_settings))
+            {
+                serialized.FindProperty(field).floatValue = value;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            Assert.Throws<ArgumentOutOfRangeException>(() => _settings.Validate());
         }
 
         [Test]

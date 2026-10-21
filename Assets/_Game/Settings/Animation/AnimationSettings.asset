@@ -17,7 +17,11 @@ MonoBehaviour:
   _clockwiseSpin: 1
   _spinEase: 10
   _dialogDurationSeconds: 0.18
-  _rewardRevealDurationSeconds: 0.25
+  _rewardRevealDurationSeconds: 0.32
+  _rewardShineDegreesPerSecond: 12
+  _rewardIconStartScale: 0.88
+  _rewardIconPeakScale: 1.03
+  _rewardTextOffset: 10
   _rewardGlowSprite: {fileID: 21300000, guid: 098fdd5016debf64286e3cd573e244ac, type: 3}
   _rewardShineSprite: {fileID: 21300000, guid: ce9ea7ee4d1f56843a9c0f8a0ee3c60e, type: 3}
   _wheelFeedbackEnabled: 1

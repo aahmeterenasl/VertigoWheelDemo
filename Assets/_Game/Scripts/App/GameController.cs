@@ -451,6 +451,10 @@ namespace VertigoWheel.App
             _uiAnimation.SpinEase = source.SpinEase;
             _uiAnimation.DialogDurationSeconds = source.DialogDurationSeconds;
             _uiAnimation.RewardRevealDurationSeconds = source.RewardRevealDurationSeconds;
+            _uiAnimation.RewardShineDegreesPerSecond = source.RewardShineDegreesPerSecond;
+            _uiAnimation.RewardIconStartScale = source.RewardIconStartScale;
+            _uiAnimation.RewardIconPeakScale = source.RewardIconPeakScale;
+            _uiAnimation.RewardTextOffset = source.RewardTextOffset;
             _uiAnimation.RewardGlowSprite = source.RewardGlowSprite;
             _uiAnimation.RewardShineSprite = source.RewardShineSprite;
             _uiAnimation.WheelFeedbackEnabled = source.WheelFeedbackEnabled;

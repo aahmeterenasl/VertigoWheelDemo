@@ -22,8 +22,21 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0f)]
         private float _dialogDurationSeconds = 0.18f;
 
+        [Header("Reward reveal")]
         [SerializeField, Min(0f)]
-        private float _rewardRevealDurationSeconds = 0.25f;
+        private float _rewardRevealDurationSeconds = 0.32f;
+
+        [SerializeField, Range(0f, 90f)]
+        private float _rewardShineDegreesPerSecond = 12f;
+
+        [SerializeField, Range(0.5f, 1f)]
+        private float _rewardIconStartScale = 0.88f;
+
+        [SerializeField, Range(1f, 1.1f)]
+        private float _rewardIconPeakScale = 1.03f;
+
+        [SerializeField, Range(0f, 30f)]
+        private float _rewardTextOffset = 10f;
 
         [SerializeField]
         private Sprite _rewardGlowSprite;
@@ -40,6 +53,46 @@ namespace VertigoWheel.Settings
 
         [SerializeField, Min(0f)]
         private float _pointerTickDurationSeconds = 0.08f;
+
+        public float RewardShineDegreesPerSecond
+        {
+            get => _rewardShineDegreesPerSecond;
+            set
+            {
+                ValidateRange(value, 0f, 90f);
+                _rewardShineDegreesPerSecond = value;
+            }
+        }
+
+        public float RewardIconStartScale
+        {
+            get => _rewardIconStartScale;
+            set
+            {
+                ValidateRange(value, 0.5f, 1f);
+                _rewardIconStartScale = value;
+            }
+        }
+
+        public float RewardIconPeakScale
+        {
+            get => _rewardIconPeakScale;
+            set
+            {
+                ValidateRange(value, 1f, 1.1f);
+                _rewardIconPeakScale = value;
+            }
+        }
+
+        public float RewardTextOffset
+        {
+            get => _rewardTextOffset;
+            set
+            {
+                ValidateRange(value, 0f, 30f);
+                _rewardTextOffset = value;
+            }
+        }
 
         public bool WheelFeedbackEnabled
         {
@@ -143,8 +196,20 @@ namespace VertigoWheel.Settings
             ValidateEase(_spinEase);
             ValidateOptionalDuration(_dialogDurationSeconds);
             ValidateOptionalDuration(_rewardRevealDurationSeconds);
+            ValidateRange(_rewardShineDegreesPerSecond, 0f, 90f);
+            ValidateRange(_rewardIconStartScale, 0.5f, 1f);
+            ValidateRange(_rewardIconPeakScale, 1f, 1.1f);
+            ValidateRange(_rewardTextOffset, 0f, 30f);
             ValidateTickAngle(_pointerTickAngleDegrees);
             ValidateOptionalDuration(_pointerTickDurationSeconds);
+        }
+
+        private static void ValidateRange(float value, float minimum, float maximum)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value) || value < minimum || value > maximum)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), $"Animation value must be between {minimum} and {maximum}.");
+            }
         }
 
         private static void ValidateTickAngle(float value)

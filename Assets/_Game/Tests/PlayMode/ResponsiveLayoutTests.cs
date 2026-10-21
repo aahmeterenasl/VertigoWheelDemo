@@ -119,7 +119,7 @@ namespace VertigoWheel.Tests.PlayMode
                     foreach (DialogView dialog in _canvas.GetComponentsInChildren<DialogView>(true))
                     {
                         Assert.That(dialog.transform.parent, Is.EqualTo(_canvas.transform), "Dimmer stays full-screen.");
-                        RectTransform safe = (RectTransform)dialog.transform.GetChild(0);
+                        RectTransform safe = (RectTransform)dialog.transform.Find("ui_safe_area");
                         Assert.That(safe.GetComponent<SafeAreaView>(), Is.Not.Null);
                         AssertInside((RectTransform)safe.GetChild(0), safe);
                     }
