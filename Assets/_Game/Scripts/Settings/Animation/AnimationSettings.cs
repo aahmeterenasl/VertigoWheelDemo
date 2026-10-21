@@ -82,6 +82,29 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0f)] private float _wheelCrossfadeSeconds = 0.20f;
         [SerializeField, Range(1f, 1.1f)] private float _milestonePulseScale = 1.04f;
 
+        [Header("Exit confirmation")]
+        [SerializeField, Min(0f)] private float _exitOpenSeconds = 0.28f;
+        [SerializeField, Min(0f)] private float _exitCloseSeconds = 0.12f;
+        [SerializeField, Range(0.9f, 1f)] private float _exitStartScale = 0.97f;
+
+        public float ExitOpenSeconds
+        {
+            get => _exitOpenSeconds;
+            set { ValidateOptionalDuration(value); _exitOpenSeconds = value; }
+        }
+
+        public float ExitCloseSeconds
+        {
+            get => _exitCloseSeconds;
+            set { ValidateOptionalDuration(value); _exitCloseSeconds = value; }
+        }
+
+        public float ExitStartScale
+        {
+            get => _exitStartScale;
+            set { ValidateRange(value, 0.9f, 1f); _exitStartScale = value; }
+        }
+
         public float ZoneTransitionSeconds
         {
             get => _zoneTransitionSeconds;
@@ -305,6 +328,9 @@ namespace VertigoWheel.Settings
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
+            ValidateOptionalDuration(_exitOpenSeconds);
+            ValidateOptionalDuration(_exitCloseSeconds);
+            ValidateRange(_exitStartScale, 0.9f, 1f);
             ValidateOptionalDuration(_zoneTransitionSeconds);
             ValidateOptionalDuration(_wheelCrossfadeSeconds);
             ValidateRange(_milestonePulseScale, 1f, 1.1f);

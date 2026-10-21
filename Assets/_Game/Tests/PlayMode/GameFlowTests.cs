@@ -63,6 +63,8 @@ namespace VertigoWheel.Tests.PlayMode
             _settings.AnimationSettings.SpinDurationSeconds = 2f;
             _settings.AnimationSettings.FullTurns = 1;
             _settings.AnimationSettings.DialogDurationSeconds = 0f;
+            _settings.AnimationSettings.ExitOpenSeconds = 0f;
+            _settings.AnimationSettings.ExitCloseSeconds = 0f;
             _settings.AnimationSettings.ZoneTransitionSeconds = 0f;
             _settings.AnimationSettings.WheelCrossfadeSeconds = 0f;
             _settings.AnimationSettings.RewardRevealDurationSeconds = 0f;
@@ -584,6 +586,94 @@ namespace VertigoWheel.Tests.PlayMode
             ClickBoardExit();
             Assert.That(_exit.IsReady, Is.True);
             Assert.That(_run.ZoneNumber, Is.EqualTo(2));
+        }
+
+        [UnityTest]
+        public IEnumerator ExitMotion_GatesEntranceAndCancelClose_WithoutRerolling()
+        {
+            _settings.AnimationSettings.ExitOpenSeconds = 0.07f;
+            _settings.AnimationSettings.ExitCloseSeconds = 0.06f;
+            WheelData prepared = _run.Wheel;
+            int calls = _wheelRandom.CallCount;
+            ClickBoardExit();
+            ClickAction(_exit, "Go Back"); ClickAction(_exit, "Collect Rewards");
+            Assert.That(_exit.IsReady, Is.False);
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(_exit.IsReady, Is.True);
+            ClickAction(_exit, "Go Back");
+            Assert.That(_exit.IsClosing, Is.True);
+            ClickSpin(); ClickBoardExit(); ClickAction(_exit, "Collect Rewards");
+            Assert.That(_run.PendingSpin, Is.Null);
+            Assert.That(_run.Summary, Is.Null);
+            _settings.AnimationSettings.ExitCloseSeconds = 60f;
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(_exit.gameObject.activeSelf, Is.False);
+            Assert.That(_run.Wheel, Is.SameAs(prepared));
+            Assert.That(_wheelRandom.CallCount, Is.EqualTo(calls));
+            ClickSpin();
+            Assert.That(_run.State, Is.EqualTo(RunState.Spinning));
+        }
+
+        [UnityTest]
+        public IEnumerator CollectMotion_CommitsOnceBeforeClosing_AndResumeOpensTheSameSummary()
+        {
+            SettleRewardAndContinue();
+            _settings.AnimationSettings.ExitCloseSeconds = 0.08f;
+            long generation = _run.RunGeneration;
+            ClickBoardExit(); ClickAction(_exit, "Collect Rewards");
+            RunSummary collected = _run.Summary;
+            Assert.That(_run.State, Is.EqualTo(RunState.CashedOut));
+            Assert.That(_exit.IsClosing, Is.True);
+            Assert.That(_summary.IsReady, Is.False);
+            ClickSpin(); ClickAction(_exit, "Go Back"); ClickAction(_exit, "Collect Rewards");
+            Assert.That(_run.Summary, Is.SameAs(collected));
+            _controller.Resume();
+            Assert.That(_exit.gameObject.activeSelf, Is.False);
+            Assert.That(_summary.IsReady, Is.True);
+            Assert.That(_run.Summary, Is.SameAs(collected));
+            ClickAction(_summary);
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(_run.RunGeneration, Is.EqualTo(generation + 1));
+            Assert.That(_summary.gameObject.activeSelf, Is.False);
+            Assert.That(_run.ZoneNumber, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator ChangedPolicy_ClosesToTheSamePreparedWheel_WithoutCollecting()
+        {
+            _settings.AnimationSettings.ExitCloseSeconds = 0.06f;
+            WheelData prepared = _run.Wheel;
+            ClickBoardExit();
+            _settings.ZoneSettings.CashOutPolicy = CashOutPolicy.SafeAndSuperZonesOnly;
+            ClickAction(_exit, "Collect Rewards");
+            Assert.That(_exit.IsClosing, Is.True);
+            ClickSpin();
+            Assert.That(_run.PendingSpin, Is.Null);
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(_exit.gameObject.activeSelf, Is.False);
+            Assert.That(_run.Wheel, Is.SameAs(prepared));
+            Assert.That(_run.Summary, Is.Null);
+            ClickSpin();
+            Assert.That(_run.State, Is.EqualTo(RunState.Spinning));
+        }
+
+        [UnityTest]
+        public IEnumerator ExitClose_DisableReleasesNavigation_AndDisposeCancelsFutureNavigation()
+        {
+            _settings.AnimationSettings.ExitCloseSeconds = 0.08f;
+            ClickBoardExit(); ClickAction(_exit, "Go Back");
+            _exit.enabled = false;
+            Assert.That(_exit.gameObject.activeSelf, Is.False);
+            _exit.enabled = true;
+            ClickBoardExit();
+            Assert.That(_exit.IsReady, Is.True);
+            ClickAction(_exit, "Collect Rewards");
+            Assert.That(_exit.IsClosing, Is.True);
+            _controller.Dispose();
+            yield return new WaitForSecondsRealtime(0.15f);
+            Assert.That(_summary.gameObject.activeSelf, Is.False);
+            ClickSpin();
+            Assert.That(_run.PendingSpin, Is.Null);
         }
 
         private SpinTicket StartRewardSpin()

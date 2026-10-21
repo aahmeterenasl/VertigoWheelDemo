@@ -36,6 +36,8 @@ namespace VertigoWheel.App
         private RunSnapshot _lastSnapshot;
         private ZoneRules _lastRules;
         private bool _disposed;
+        private bool _exitClosing;
+        private int _exitCloseVersion;
         private ZoneSettings _observedZoneSettings;
         private int _observedSafeInterval;
         private int _observedSuperInterval;
@@ -91,6 +93,11 @@ namespace VertigoWheel.App
         /// <summary>Completes an accepted spin through its original once-only settlement path after app suspension.</summary>
         public void Resume()
         {
+            if (!_disposed && _exitClosing)
+            {
+                _exitConfirmation.CompleteClose();
+                return;
+            }
             if (!_disposed && _arrivalTicket != null)
             {
                 SpinTicket arrival = _arrivalTicket;
@@ -118,6 +125,8 @@ namespace VertigoWheel.App
                 return;
             }
             _disposed = true;
+            _exitCloseVersion++;
+            _exitClosing = false;
             _arrivalTicket = null;
             if (_view != null)
             {
@@ -347,36 +356,51 @@ namespace VertigoWheel.App
 
         private void HandleKeepPlaying()
         {
-            if (_disposed || _modal != ActiveModal.Exit || _run.State != RunState.Ready)
+            if (_disposed || _exitClosing || _modal != ActiveModal.Exit || _run.State != RunState.Ready) return;
+            Execute(() =>
             {
-                return;
-            }
-            _exitConfirmation.Hide();
-            _modal = ActiveModal.None;
-            Execute(Render);
+                CaptureAnimation();
+                CloseExit(() =>
+                {
+                    _modal = ActiveModal.None;
+                    Render();
+                });
+            }, () => _exitConfirmation.Show(_uiAnimation));
         }
 
         private void HandleCollect()
         {
-            if (_disposed || _modal != ActiveModal.Exit || _run.State != RunState.Ready)
-            {
-                return;
-            }
+            if (_disposed || _exitClosing || _modal != ActiveModal.Exit || _run.State != RunState.Ready) return;
             Execute(() =>
             {
                 CaptureAnimation();
                 if (!_run.TryCashOut(out RunSummary summary))
                 {
-                    _exitConfirmation.Hide();
-                    _modal = ActiveModal.None;
-                    Render();
-                    _view.SetStatus("Exit is available in safe and super zones.");
+                    CloseExit(() =>
+                    {
+                        _modal = ActiveModal.None;
+                        Render();
+                        _view.SetStatus("Exit is available in safe and super zones.");
+                    });
                     return;
                 }
-                _exitConfirmation.Hide();
                 _view.SetStatus(string.Empty);
-                ShowSummary(summary);
+                CloseExit(() => ShowSummary(summary));
             }, () => _exitConfirmation.Show(_uiAnimation));
+        }
+
+        private void CloseExit(Action finished)
+        {
+            _exitClosing = true;
+            int version = ++_exitCloseVersion;
+            long generation = _run.RunGeneration;
+            _exitConfirmation.Close(_uiAnimation.ExitCloseSeconds, () =>
+            {
+                if (_disposed || version != _exitCloseVersion || _run.RunGeneration != generation
+                    || _modal != ActiveModal.Exit) return;
+                _exitClosing = false;
+                Execute(finished);
+            });
         }
 
         private void HandleRestart()
@@ -522,6 +546,9 @@ namespace VertigoWheel.App
             _uiAnimation.ClockwiseSpin = source.ClockwiseSpin;
             _uiAnimation.SpinEase = source.SpinEase;
             _uiAnimation.DialogDurationSeconds = source.DialogDurationSeconds;
+            _uiAnimation.ExitOpenSeconds = source.ExitOpenSeconds;
+            _uiAnimation.ExitCloseSeconds = source.ExitCloseSeconds;
+            _uiAnimation.ExitStartScale = source.ExitStartScale;
             _uiAnimation.RewardRevealDurationSeconds = source.RewardRevealDurationSeconds;
             _uiAnimation.RewardShineDegreesPerSecond = source.RewardShineDegreesPerSecond;
             _uiAnimation.RewardIconStartScale = source.RewardIconStartScale;

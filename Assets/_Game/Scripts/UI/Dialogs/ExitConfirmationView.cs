@@ -16,6 +16,8 @@ namespace VertigoWheel.UI.Dialogs
         [SerializeField]
         private ActionButtonView _keepPlayingButton;
 
+        [SerializeField] private UiMotionView _foreground;
+
         private bool _actionPending = true;
         private ActionButtonView _listenedCollectButton;
         private ActionButtonView _listenedKeepPlayingButton;
@@ -23,6 +25,7 @@ namespace VertigoWheel.UI.Dialogs
         public event Action CollectRequested;
         public event Action KeepPlayingRequested;
         public bool IsReady => _dialog != null && _dialog.IsReady && !_actionPending;
+        public bool IsClosing => _dialog != null && _dialog.IsClosing;
 
         public void Show(AnimationSettings settings)
         {
@@ -34,12 +37,25 @@ namespace VertigoWheel.UI.Dialogs
             _actionPending = true;
             _collectButton.SetInteractable(true);
             _keepPlayingButton.SetInteractable(true);
-            _dialog.Show(settings.DialogDurationSeconds, () => _actionPending = false);
+            float duration = settings.ExitOpenSeconds;
+            _dialog.Show(duration, () => _actionPending = false);
+            _foreground?.Reveal(duration * (4f / 7f), duration * (3f / 7f), 0f, settings.ExitStartScale);
         }
+
+        public void Close(float duration, Action closed)
+        {
+            _actionPending = true;
+            _collectButton.SetInteractable(false);
+            _keepPlayingButton.SetInteractable(false);
+            _dialog.Close(duration, closed);
+        }
+
+        public void CompleteClose() => _dialog.CompleteClose();
 
         public void Hide()
         {
             _actionPending = true;
+            _foreground?.Complete();
             _dialog.Hide();
         }
 
@@ -51,12 +67,12 @@ namespace VertigoWheel.UI.Dialogs
         {
             if (_collectButton == null)
             {
-                _collectButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_collect_rewards")
+                _collectButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_animation_exit_content/ui_button_collect_rewards")
                     ?.GetComponent<ActionButtonView>();
             }
             if (_keepPlayingButton == null)
             {
-                _keepPlayingButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_keep_playing")
+                _keepPlayingButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_animation_exit_content/ui_button_keep_playing")
                     ?.GetComponent<ActionButtonView>();
             }
         }
@@ -80,6 +96,8 @@ namespace VertigoWheel.UI.Dialogs
 
         private void OnDisable()
         {
+            _dialog?.CompleteClose();
+            _foreground?.Complete();
             if (_listenedCollectButton != null)
             {
                 _listenedCollectButton.Clicked -= Collect;

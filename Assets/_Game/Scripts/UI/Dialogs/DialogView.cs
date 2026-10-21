@@ -18,12 +18,15 @@ namespace VertigoWheel.UI.Dialogs
 
         private Tween _openingTween;
         private Action _shown;
+        private Action _closed;
+        private bool _closing;
         private int _showVersion;
         private bool _isOpen;
         private bool _isReady;
 
         public bool IsOpen => _isOpen;
         public bool IsReady => _isReady;
+        public bool IsClosing => _closing;
 
         public void Show(float duration, Action shown = null)
         {
@@ -36,7 +39,7 @@ namespace VertigoWheel.UI.Dialogs
                 throw new InvalidOperationException("A dialog requires its CanvasGroup and content reference.");
             }
 
-            CancelOpening();
+            CancelTransition();
             int version = _showVersion;
             _isOpen = true;
             _shown = shown;
@@ -77,28 +80,42 @@ namespace VertigoWheel.UI.Dialogs
             gameObject.SetActive(false);
         }
 
-        public void Hide(float duration)
+        public void Hide(float duration) => Close(duration, null);
+
+        /// <summary>Normal navigation keeps its input blocker until the close callback is delivered.</summary>
+        public void Close(float duration, Action closed)
         {
             if (float.IsNaN(duration) || float.IsInfinity(duration) || duration < 0f)
-            {
                 throw new ArgumentOutOfRangeException(nameof(duration));
-            }
-            if (duration == 0f || !_isOpen)
+            if (duration == 0f || !_isOpen || !isActiveAndEnabled)
             {
                 Hide();
+                closed?.Invoke();
                 return;
             }
-            CancelOpening();
+            CancelTransition();
             int version = _showVersion;
+            _closed = closed;
+            _closing = true;
             _group.interactable = false;
             _openingTween = DOTween.To(() => _group.alpha, value => _group.alpha = value, 0f, duration)
                 .SetUpdate(true).SetTarget(this).SetLink(gameObject, LinkBehaviour.KillOnDisable)
-                .OnComplete(() =>
-                {
-                    if (version != _showVersion) return;
-                    _openingTween = null;
-                    Hide();
-                });
+                .OnComplete(() => FinishClose(version));
+        }
+
+        public void CompleteClose()
+        {
+            if (_closing) FinishClose(_showVersion);
+        }
+
+        private void FinishClose(int version)
+        {
+            if (version != _showVersion || !_closing) return;
+            Action closed = _closed;
+            _closed = null;
+            _closing = false;
+            Hide();
+            closed?.Invoke();
         }
 
         private void FinishOpening(int version)
@@ -118,11 +135,13 @@ namespace VertigoWheel.UI.Dialogs
             shown?.Invoke();
         }
 
-        private void CancelOpening()
+        private void CancelTransition()
         {
             _showVersion++;
             _isReady = false;
             _shown = null;
+            _closed = null;
+            _closing = false;
             Tween opening = _openingTween;
             _openingTween = null;
             opening?.Kill(false);
@@ -130,7 +149,7 @@ namespace VertigoWheel.UI.Dialogs
 
         private void ResetView()
         {
-            CancelOpening();
+            CancelTransition();
             _isOpen = false;
             if (_group != null)
             {
@@ -145,7 +164,12 @@ namespace VertigoWheel.UI.Dialogs
             if (_backdrop != null) _backdrop.alpha = 1f;
         }
 
-        private void OnDisable() => ResetView();
-        private void OnDestroy() => CancelOpening();
+        private void OnDisable()
+        {
+            // A disappearing optional view must not strand normal navigation in the controller.
+            if (_closing) CompleteClose();
+            else ResetView();
+        }
+        private void OnDestroy() => CancelTransition();
     }
 }

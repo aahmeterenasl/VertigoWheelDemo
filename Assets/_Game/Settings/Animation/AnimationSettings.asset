@@ -38,3 +38,6 @@ MonoBehaviour:
   _zoneTransitionSeconds: 0.26
   _wheelCrossfadeSeconds: 0.2
   _milestonePulseScale: 1.04
+  _exitOpenSeconds: 0.28
+  _exitCloseSeconds: 0.12
+  _exitStartScale: 0.97

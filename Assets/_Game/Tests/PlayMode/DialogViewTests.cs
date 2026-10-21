@@ -32,6 +32,7 @@ namespace VertigoWheel.Tests.PlayMode
             SetReference(_dialog, "_content", _content);
             _settings = ScriptableObject.CreateInstance<AnimationSettings>();
             _settings.DialogDurationSeconds = 0f;
+            _settings.ExitOpenSeconds = 0f;
         }
 
         [UnityTearDown]
@@ -108,6 +109,48 @@ namespace VertigoWheel.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator Close_DeliversOnceAfterHiding_AndReopenCancelsOldNavigation()
+        {
+            int completed = 0;
+            Time.timeScale = 0f;
+            _dialog.Show(0f);
+            _dialog.Close(0.05f, () =>
+            {
+                Assert.That(_root.activeSelf, Is.False);
+                completed++;
+            });
+            Assert.That(_dialog.IsClosing, Is.True);
+            Assert.That(_group.blocksRaycasts, Is.True);
+            Assert.That(_dialog.IsReady, Is.False);
+            yield return new WaitForSecondsRealtime(0.12f);
+            _dialog.CompleteClose();
+            Assert.That(completed, Is.EqualTo(1));
+            _dialog.Show(0f);
+            _dialog.Close(0.05f, () => completed++);
+            _dialog.Show(0f);
+            yield return new WaitForSecondsRealtime(0.12f);
+            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(_dialog.IsReady, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator DisableDuringClose_CompletesNavigation_WhileImmediateHideCancelsIt()
+        {
+            int completed = 0;
+            _dialog.Show(0f);
+            _dialog.Close(0.1f, () => completed++);
+            _root.SetActive(false);
+            Assert.That(completed, Is.EqualTo(1));
+            _dialog.Show(0f);
+            _dialog.Close(0.1f, () => completed++);
+            _dialog.Hide();
+            yield return new WaitForSecondsRealtime(0.2f);
+            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(_dialog.IsOpen, Is.False);
+            Assert.That(_dialog.IsClosing, Is.False);
+        }
+
+        [UnityTest]
         public IEnumerator DisableWhileOpening_DropsTheCallbackAndReleasesInput()
         {
             int completions = 0;
@@ -137,7 +180,7 @@ namespace VertigoWheel.Tests.PlayMode
             exit.CollectRequested += () => collections++;
             exit.KeepPlayingRequested += () => cancellations++;
 
-            _settings.DialogDurationSeconds = 0.06f;
+            _settings.ExitOpenSeconds = 0.06f;
             exit.Show(_settings);
             collect.onClick.Invoke();
             keepPlaying.onClick.Invoke();
@@ -154,7 +197,7 @@ namespace VertigoWheel.Tests.PlayMode
                 exit.Hide();
                 keepPlaying.onClick.Invoke();
                 Assert.That(cancellations, Is.EqualTo(index));
-                _settings.DialogDurationSeconds = 0f;
+                _settings.ExitOpenSeconds = 0f;
                 exit.Show(_settings);
                 keepPlaying.onClick.Invoke();
                 keepPlaying.onClick.Invoke();
