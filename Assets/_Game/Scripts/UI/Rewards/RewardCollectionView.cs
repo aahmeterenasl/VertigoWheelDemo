@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using VertigoWheel.UI.Common;
 using UnityEngine;
 using VertigoWheel.Core.Rewards;
 using VertigoWheel.Settings;
@@ -21,6 +22,56 @@ namespace VertigoWheel.UI.Rewards
 
         [SerializeField]
         private TMP_Text _emptyLabel;
+
+        [SerializeField] private UiMotionView _arrivalAccent;
+        private RewardId _pendingId;
+        private long _pendingIncrement;
+        private bool _pending;
+        private bool _held;
+        private readonly Vector3[] _corners = new Vector3[4];
+
+        public void StageArrival(RewardId id, long increment)
+        {
+            CompleteFeedback();
+            _pending = true;
+            _held = false;
+            _pendingId = id;
+            _pendingIncrement = increment;
+        }
+
+        public void PlayArrival(AnimationSettings settings)
+        {
+            if (!_pending) return;
+            _pending = false;
+            foreach (RewardItemView item in _items)
+            {
+                if (item == null || !item.gameObject.activeInHierarchy || item.RewardId != _pendingId) continue;
+                bool visible = IsVisible(item.IconTransform);
+                item.Arrive(_pendingIncrement, settings, visible);
+                if (!visible) _arrivalAccent?.Pulse(settings.LedgerDurationSeconds, 1.015f);
+                return;
+            }
+        }
+
+        public void CompleteFeedback()
+        {
+            _pending = false;
+            _held = false;
+            foreach (RewardItemView item in _items) if (item != null) item.FinishFeedback();
+            _arrivalAccent?.Complete();
+        }
+
+        private bool IsVisible(RectTransform target)
+        {
+            if (target == null || _scrollRect == null || _scrollRect.viewport == null) return false;
+            target.GetWorldCorners(_corners);
+            var viewport = _scrollRect.viewport;
+            Vector2 min = viewport.InverseTransformPoint(_corners[0]);
+            Vector2 max = viewport.InverseTransformPoint(_corners[2]);
+            return viewport.rect.Overlaps(Rect.MinMaxRect(min.x, min.y, max.x, max.y));
+        }
+
+        private void OnDisable() => CompleteFeedback();
 
         private readonly List<RewardItemView> _items = new List<RewardItemView>();
 
@@ -62,6 +113,11 @@ namespace VertigoWheel.UI.Rewards
                 RewardItemView item = _items[index];
                 item.Bind(catalog[amount.RewardId], amount.Quantity);
                 item.gameObject.SetActive(true);
+                if (_pending && !_held && amount.RewardId == _pendingId)
+                {
+                    item.HoldQuantity(Math.Max(0L, amount.Quantity - _pendingIncrement));
+                    _held = true;
+                }
             }
             for (int index = rewards.Count; index < _items.Count; index++)
             {
@@ -72,6 +128,7 @@ namespace VertigoWheel.UI.Rewards
             UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
             if (resetScroll)
             {
+                CompleteFeedback();
                 StopScrolling();
                 _scrollRect.normalizedPosition = new Vector2(0f, 1f);
             }

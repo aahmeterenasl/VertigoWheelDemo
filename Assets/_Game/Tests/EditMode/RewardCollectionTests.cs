@@ -194,7 +194,7 @@ namespace VertigoWheel.Tests.EditMode
 
             item.Bind(_catalog[RewardId.Cash], 1463);
 
-            Assert.That(instance.transform.Find("ui_text_reward_quantity_value").GetComponent<TMP_Text>().text,
+            Assert.That(instance.transform.Find((hasName ? "" : "ui_animation_reward_content/") + "ui_text_reward_quantity_value").GetComponent<TMP_Text>().text,
                 Is.EqualTo(expected));
             Transform name = instance.transform.Find("ui_text_reward_name_value");
             Assert.That(name != null, Is.EqualTo(hasName));

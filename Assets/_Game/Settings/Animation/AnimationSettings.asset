@@ -33,3 +33,5 @@ MonoBehaviour:
   _wheelFeedbackEnabled: 1
   _pointerTickAngleDegrees: 6
   _pointerTickDurationSeconds: 0.08
+  _ledgerDurationSeconds: 0.24
+  _ledgerPulseScale: 1.06

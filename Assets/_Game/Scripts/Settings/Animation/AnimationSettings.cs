@@ -73,6 +73,22 @@ namespace VertigoWheel.Settings
         [SerializeField, Min(0f)]
         private float _pointerTickDurationSeconds = 0.08f;
 
+        [Header("Ledger feedback")]
+        [SerializeField, Min(0f)] private float _ledgerDurationSeconds = 0.24f;
+        [SerializeField, Range(1f, 1.1f)] private float _ledgerPulseScale = 1.06f;
+
+        public float LedgerDurationSeconds
+        {
+            get => _ledgerDurationSeconds;
+            set { ValidateOptionalDuration(value); _ledgerDurationSeconds = value; }
+        }
+
+        public float LedgerPulseScale
+        {
+            get => _ledgerPulseScale;
+            set { ValidateRange(value, 1f, 1.1f); _ledgerPulseScale = value; }
+        }
+
         public bool RewardFlightEnabled
         {
             get => _rewardFlightEnabled;
@@ -266,6 +282,8 @@ namespace VertigoWheel.Settings
         /// <summary>Also checks Inspector values, which bypass property setters.</summary>
         public void Validate()
         {
+            ValidateOptionalDuration(_ledgerDurationSeconds);
+            ValidateRange(_ledgerPulseScale, 1f, 1.1f);
             ValidateDuration(_spinDurationSeconds);
             ValidateFullTurns(_fullTurns);
             ValidateEase(_spinEase);

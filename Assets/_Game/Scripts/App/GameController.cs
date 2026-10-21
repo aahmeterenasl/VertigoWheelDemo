@@ -118,6 +118,7 @@ namespace VertigoWheel.App
             _arrivalTicket = null;
             if (_view != null)
             {
+                _view.CompleteRewardFeedback();
                 _view.RewardArrival?.Cancel();
                 if (_view.Wheel != null)
                 {
@@ -230,6 +231,7 @@ namespace VertigoWheel.App
                 }
 
                 _modal = ActiveModal.Reward;
+                _view.StageRewardArrival(ticket.Outcome.RewardId, ticket.Outcome.Quantity);
                 Render();
                 ShowReward();
             });
@@ -276,6 +278,7 @@ namespace VertigoWheel.App
                     return;
                 }
                 _rewardReveal.Hide();
+                _view.PlayRewardArrival(_uiAnimation);
                 _modal = ActiveModal.None;
                 Render();
             }, ShowReward);
@@ -285,6 +288,7 @@ namespace VertigoWheel.App
         {
             if (_disposed || !ReferenceEquals(_arrivalTicket, ticket)) return;
             _arrivalTicket = null;
+            _view.PlayRewardArrival(_uiAnimation);
             _view.RewardArrival?.Cancel();
             _rewardReveal.Hide();
             _modal = ActiveModal.None;
@@ -493,6 +497,8 @@ namespace VertigoWheel.App
             _uiAnimation.RewardIconStartScale = source.RewardIconStartScale;
             _uiAnimation.RewardIconPeakScale = source.RewardIconPeakScale;
             _uiAnimation.RewardTextOffset = source.RewardTextOffset;
+            _uiAnimation.LedgerDurationSeconds = source.LedgerDurationSeconds;
+            _uiAnimation.LedgerPulseScale = source.LedgerPulseScale;
             _uiAnimation.RewardFlightEnabled = source.RewardFlightEnabled;
             _uiAnimation.RewardFlightDurationSeconds = source.RewardFlightDurationSeconds;
             _uiAnimation.RewardFlightStaggerSeconds = source.RewardFlightStaggerSeconds;

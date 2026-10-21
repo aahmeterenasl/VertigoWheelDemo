@@ -55,6 +55,9 @@ namespace VertigoWheel.UI.Board
         public WheelView Wheel => _wheel;
         public WheelAnimator WheelAnimator => _wheelAnimator;
         public RewardArrivalView RewardArrival => _rewardArrival;
+        public void StageRewardArrival(RewardId id, long quantity) => _rewards.StageArrival(id, quantity);
+        public void PlayRewardArrival(AnimationSettings settings) => _rewards.PlayArrival(settings);
+        public void CompleteRewardFeedback() => _rewards.CompleteFeedback();
 
         public event Action ExitRequested;
 
