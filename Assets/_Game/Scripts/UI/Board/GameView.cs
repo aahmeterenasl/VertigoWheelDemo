@@ -105,11 +105,28 @@ namespace VertigoWheel.UI.Board
             _rewards?.SetInteractionEnabled(!blocked);
         }
 
+        private void Awake() => CacheButtons();
+
+        private void OnValidate() => CacheButtons();
+
+        private void CacheButtons()
+        {
+            if (_exitButton == null)
+            {
+                _exitButton = transform.Find("ui_panel_run_rewards/ui_button_exit")?.GetComponent<ActionButtonView>();
+            }
+        }
+
         private void OnEnable()
         {
-            if (_exitButton == null || !Application.IsPlaying(gameObject))
+            CacheButtons();
+            if (!Application.IsPlaying(gameObject))
             {
                 return;
+            }
+            if (_exitButton == null)
+            {
+                throw new InvalidOperationException("The board is missing its Exit action button.");
             }
             _listenedExitButton = _exitButton;
             _listenedExitButton.Clicked += HandleExit;
@@ -131,6 +148,7 @@ namespace VertigoWheel.UI.Board
 
         private void ValidateReferences()
         {
+            CacheButtons();
             if (_wheel == null || _wheelAnimator == null || _exitButton == null || _rewards == null
                 || _zoneLabel == null || _zoneTypeLabel == null || _nextSafeLabel == null
                 || _nextSuperLabel == null || _statusLabel == null || _boardGroup == null || _zoneTrack == null)

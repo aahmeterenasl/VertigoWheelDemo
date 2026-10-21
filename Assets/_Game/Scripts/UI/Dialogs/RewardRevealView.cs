@@ -31,6 +31,7 @@ namespace VertigoWheel.UI.Dialogs
         private ActionButtonView _continueButton;
 
         private bool _actionPending = true;
+        private ActionButtonView _listenedContinueButton;
 
         public event Action ContinueRequested;
         public bool IsReady => _dialog != null && _dialog.IsReady && !_actionPending;
@@ -75,19 +76,40 @@ namespace VertigoWheel.UI.Dialogs
             image.preserveAspect = true;
         }
 
+        private void Awake() => CacheButtons();
+
+        private void OnValidate() => CacheButtons();
+
+        private void CacheButtons()
+        {
+            if (_continueButton == null)
+            {
+                _continueButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_continue")
+                    ?.GetComponent<ActionButtonView>();
+            }
+        }
+
         private void OnEnable()
         {
-            if (Application.IsPlaying(gameObject))
+            CacheButtons();
+            if (!Application.IsPlaying(gameObject))
             {
-                _continueButton.Clicked += Continue;
+                return;
             }
+            if (_continueButton == null)
+            {
+                throw new InvalidOperationException("The reward reveal is missing its Continue action button.");
+            }
+            _listenedContinueButton = _continueButton;
+            _listenedContinueButton.Clicked += Continue;
         }
 
         private void OnDisable()
         {
-            if (_continueButton != null)
+            if (_listenedContinueButton != null)
             {
-                _continueButton.Clicked -= Continue;
+                _listenedContinueButton.Clicked -= Continue;
+                _listenedContinueButton = null;
             }
             _actionPending = true;
         }

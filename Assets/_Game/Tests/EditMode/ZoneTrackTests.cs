@@ -22,7 +22,7 @@ namespace VertigoWheel.Tests.EditMode
         public void SetUp()
         {
             _instance = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Game/Prefabs/UI/Board/ZoneTrackView.prefab"));
+                "Assets/_Game/Prefabs/UI/Board/ui_panel_zone_track.prefab"));
             _view = _instance.GetComponent<ZoneTrackView>();
             _settings = Object.Instantiate(AssetDatabase.LoadAssetAtPath<ZoneTrackSettings>(
                 "Assets/_Game/Settings/UI/ZoneTrackSettings.asset"));
@@ -115,7 +115,7 @@ namespace VertigoWheel.Tests.EditMode
         public void CurrentMarker_UsesZoneStyleAndCompletedNumbersAreDimmed(int current, ZoneType type)
         {
             _view.Render(current, Rules());
-            var marker = _view.transform.Find("ui_image_current_zone").GetComponent<UnityEngine.UI.Image>();
+            var marker = _view.transform.Find("ui_image_zone_current_value").GetComponent<UnityEngine.UI.Image>();
             Sprite expected = type == ZoneType.Super ? _settings.SuperCurrentBackgroundSprite
                 : type == ZoneType.Safe ? _settings.SafeCurrentBackgroundSprite : _settings.CurrentBackgroundSprite;
             Assert.That(marker.sprite, Is.SameAs(expected));

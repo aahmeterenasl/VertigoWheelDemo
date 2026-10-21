@@ -180,8 +180,8 @@ namespace VertigoWheel.Tests.EditMode
                 Is.EqualTo("Gold"));
         }
 
-        [TestCase("RewardRowView", "1,463", false)]
-        [TestCase("RewardTileView", "x1,463", true)]
+        [TestCase("ui_panel_reward_row", "1,463", false)]
+        [TestCase("ui_panel_reward_card", "x1,463", true)]
         public void AuthoredRewardItems_BindTheirOwnQuantityFormat(string prefabName, string expected, bool hasName)
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -206,7 +206,7 @@ namespace VertigoWheel.Tests.EditMode
         public void BoardRender_UsesPreparedZoneAndBlocksControlsAndMomentumBehindModal()
         {
             GameSettings settings = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/_Game/Settings/GameSettings.asset");
-            GameObject wheelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/WheelView.prefab");
+            GameObject wheelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel.prefab");
             Assert.That(settings, Is.Not.Null);
             Assert.That(wheelPrefab, Is.Not.Null);
             WheelView wheel = Object.Instantiate(wheelPrefab, _canvasRoot.transform, false).GetComponent<WheelView>();
@@ -229,7 +229,7 @@ namespace VertigoWheel.Tests.EditMode
             SetField(board, "_statusLabel", AddText("ui_text_status", boardObject.transform));
             SetField(board, "_boardGroup", boardGroup);
             GameObject trackPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Game/Prefabs/UI/Board/ZoneTrackView.prefab");
+                "Assets/_Game/Prefabs/UI/Board/ui_panel_zone_track.prefab");
             Assert.That(trackPrefab, Is.Not.Null);
             SetField(board, "_zoneTrack", Object.Instantiate(trackPrefab, boardObject.transform, false).GetComponent<ZoneTrackView>());
             RunSession session = new RunSession(settings, new SystemRandomSource(12), new SystemRandomSource(34), 29);

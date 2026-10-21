@@ -17,6 +17,8 @@ namespace VertigoWheel.UI.Dialogs
         private ActionButtonView _keepPlayingButton;
 
         private bool _actionPending = true;
+        private ActionButtonView _listenedCollectButton;
+        private ActionButtonView _listenedKeepPlayingButton;
 
         public event Action CollectRequested;
         public event Action KeepPlayingRequested;
@@ -41,25 +43,52 @@ namespace VertigoWheel.UI.Dialogs
             _dialog.Hide();
         }
 
+        private void Awake() => CacheButtons();
+
+        private void OnValidate() => CacheButtons();
+
+        private void CacheButtons()
+        {
+            if (_collectButton == null)
+            {
+                _collectButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_collect_rewards")
+                    ?.GetComponent<ActionButtonView>();
+            }
+            if (_keepPlayingButton == null)
+            {
+                _keepPlayingButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_keep_playing")
+                    ?.GetComponent<ActionButtonView>();
+            }
+        }
+
         private void OnEnable()
         {
+            CacheButtons();
             if (!Application.IsPlaying(gameObject))
             {
                 return;
             }
-            _collectButton.Clicked += Collect;
-            _keepPlayingButton.Clicked += KeepPlaying;
+            if (_collectButton == null || _keepPlayingButton == null)
+            {
+                throw new InvalidOperationException("The exit confirmation is missing its Collect or Keep Playing action button.");
+            }
+            _listenedCollectButton = _collectButton;
+            _listenedKeepPlayingButton = _keepPlayingButton;
+            _listenedCollectButton.Clicked += Collect;
+            _listenedKeepPlayingButton.Clicked += KeepPlaying;
         }
 
         private void OnDisable()
         {
-            if (_collectButton != null)
+            if (_listenedCollectButton != null)
             {
-                _collectButton.Clicked -= Collect;
+                _listenedCollectButton.Clicked -= Collect;
+                _listenedCollectButton = null;
             }
-            if (_keepPlayingButton != null)
+            if (_listenedKeepPlayingButton != null)
             {
-                _keepPlayingButton.Clicked -= KeepPlaying;
+                _listenedKeepPlayingButton.Clicked -= KeepPlaying;
+                _listenedKeepPlayingButton = null;
             }
             _actionPending = true;
         }

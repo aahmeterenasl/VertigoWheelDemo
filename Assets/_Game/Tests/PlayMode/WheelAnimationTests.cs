@@ -33,7 +33,7 @@ namespace VertigoWheel.Tests.PlayMode
 #if UNITY_EDITOR
             Assert.That(Application.isPlaying, Is.True, "These tests must run in PlayMode.");
             _gameSettings = AssetDatabase.LoadAssetAtPath<GameSettings>("Assets/_Game/Settings/GameSettings.asset");
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/WheelView.prefab");
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel.prefab");
             Assert.That(_gameSettings, Is.Not.Null, "The authored GameSettings asset is required.");
             Assert.That(prefab, Is.Not.Null, "The authored wheel prefab is required.");
             Assert.That(_gameSettings.AnimationSettings, Is.Not.Null);

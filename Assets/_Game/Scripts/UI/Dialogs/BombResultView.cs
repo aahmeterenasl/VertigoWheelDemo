@@ -23,6 +23,7 @@ namespace VertigoWheel.UI.Dialogs
         private ActionButtonView _restartButton;
 
         private bool _actionPending = true;
+        private ActionButtonView _listenedRestartButton;
 
         public event Action RestartRequested;
         public bool IsReady => _dialog != null && _dialog.IsReady && !_actionPending;
@@ -55,12 +56,32 @@ namespace VertigoWheel.UI.Dialogs
             _dialog.Hide();
         }
 
+        private void Awake() => CacheButtons();
+
+        private void OnValidate() => CacheButtons();
+
+        private void CacheButtons()
+        {
+            if (_restartButton == null)
+            {
+                _restartButton = transform.Find("ui_safe_area/ui_panel_dialog_content/ui_button_restart")
+                    ?.GetComponent<ActionButtonView>();
+            }
+        }
+
         private void OnEnable()
         {
-            if (Application.IsPlaying(gameObject))
+            CacheButtons();
+            if (!Application.IsPlaying(gameObject))
             {
-                _restartButton.Clicked += Restart;
+                return;
             }
+            if (_restartButton == null)
+            {
+                throw new InvalidOperationException("The bomb result is missing its Restart action button.");
+            }
+            _listenedRestartButton = _restartButton;
+            _listenedRestartButton.Clicked += Restart;
         }
 
         private void OnDisable()
@@ -69,9 +90,10 @@ namespace VertigoWheel.UI.Dialogs
             {
                 _rewards.SetInteractionEnabled(false);
             }
-            if (_restartButton != null)
+            if (_listenedRestartButton != null)
             {
-                _restartButton.Clicked -= Restart;
+                _listenedRestartButton.Clicked -= Restart;
+                _listenedRestartButton = null;
             }
             _actionPending = true;
         }

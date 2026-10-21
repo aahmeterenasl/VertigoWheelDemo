@@ -18,7 +18,7 @@ namespace VertigoWheel.Tests.EditMode
         public void SetUp()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Game/Prefabs/UI/Wheel/WheelSlotView.prefab");
+                "Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel_slot.prefab");
             Assert.That(prefab, Is.Not.Null);
             _view = Object.Instantiate(prefab).GetComponent<WheelSlotView>();
             _icon = _view.GetComponentInChildren<Image>(true).rectTransform;

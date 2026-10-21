@@ -24,7 +24,7 @@ namespace VertigoWheel.Tests.EditMode
         public void SetUp()
         {
             _prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Game/Prefabs/UI/Wheel/WheelView.prefab");
+                "Assets/_Game/Prefabs/UI/Wheel/ui_panel_wheel.prefab");
             _settings = AssetDatabase.LoadAssetAtPath<WheelSettings>(
                 "Assets/_Game/Settings/Wheels/BronzeWheelSettings.asset");
             Assert.That(_prefab, Is.Not.Null);
